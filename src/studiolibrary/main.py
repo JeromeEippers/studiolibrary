@@ -37,9 +37,40 @@ def zefir_supervisors():
     """Returns the list of animation supervisors
     
     Returns:
-        list string -- the supervisors id
+        list string -- the supervisors codes
     """
-    return ['dirkd'] 
+    context = zefir.get_context()
+    if context != None:
+        return [user.code for user in context.filter_all_users()
+                 if ( user.is_supervisor == True
+                 and 'animation' in user.teams )]
+    return []
+
+
+def zefir_allusers():
+    """returns the list of all users in zefir for this context
+    
+    Returns:
+        list string -- list of users code
+    """
+    context = zefir.get_context()
+    if context != None:
+        return [user.code for user in context.filter_all_users()]
+
+    return []
+
+
+def zefir_currentuser():
+    """returns the current user
+    
+    Returns:
+        string -- the code of the user
+    """
+    context = zefir.get_context()
+    if context != None:
+        return context.authenticated_user.code
+
+    return ""
 
 
 def main(*args, **kwargs):
