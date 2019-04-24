@@ -12,6 +12,34 @@
 
 import studioqt
 import studiolibrary
+import zefir
+import platform
+
+
+def zefir_library():
+    """Return the project path on the NAS
+    
+    Returns:
+        string -- the path to the library
+    """
+    context = zefir.get_context()
+    if context != None:
+        projectname = context.find_project().name
+
+        rootPath = "/nwave/projects/{0}/LIB/StudioLibrary/".format(projectname)
+        if 'windows' in platform.system().lower():
+            rootPath = "\\\\nwave\\projects\\{0}\\LIB\\StudioLibrary\\".format(projectname)
+
+        return rootPath
+
+    
+def zefir_supervisors():
+    """Returns the list of animation supervisors
+    
+    Returns:
+        list string -- the supervisors id
+    """
+    return ['dirkd'] 
 
 
 def main(*args, **kwargs):
@@ -37,6 +65,13 @@ def main(*args, **kwargs):
         studiolibrary.reload()
 
     import studiolibrary
+
+    #merge the default value in the kwargs parameters:
+    if "path" not in kwargs:
+        kwargs["path"] = zefir_library()
+
+    if "superusers" not in kwargs:
+        kwargs["superusers"] = zefir_supervisors()
 
     if studiolibrary.isMaya():
         import studiolibrarymaya
