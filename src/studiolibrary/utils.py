@@ -381,7 +381,7 @@ def isMaya():
         import maya.cmds
         maya.cmds.about(batch=True)
         return True
-    except ImportError:
+    except:
         return False
 
 
