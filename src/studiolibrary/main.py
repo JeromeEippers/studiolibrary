@@ -16,6 +16,19 @@ import zefir
 import platform
 
 
+def zefir_projectName():
+    """get the project name
+    
+    Returns:
+        string -- the name of the project
+    """
+    context = zefir.get_context()
+    if context != None:
+        return context.find_project().name
+    return "UNSET"
+
+
+
 def zefir_library():
     """Return the project path on the NAS
     

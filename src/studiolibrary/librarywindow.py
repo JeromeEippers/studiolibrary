@@ -761,23 +761,9 @@ class LibraryWindow(QtWidgets.QWidget):
         
         :rtype: None 
         """
-        data = {}
         root = self.path()
-
-        queries = [{'filters': [('type', 'is', 'Folder')]}]
-
-        items = self.library().findItems(queries)
-        trashIconPath = studiolibrary.resource().get("icons", "delete_96.png")
-
-        for item in items:
-            path = item.path()
-
-            if item.path().endswith('Trash'):
-                data[path] = {'iconPath': trashIconPath}
-            else:
-                data[path] = {}
-
-        self.sidebarWidget().setData(data, root=root)
+        #we let the sidebar manage this entierly
+        self.sidebarWidget().setData(data=None, root=root)
 
     def createFolderContextMenu(self):
         """

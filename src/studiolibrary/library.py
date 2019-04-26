@@ -19,6 +19,7 @@ import collections
 import studiolibrary
 
 from studioqt import QtCore
+from main import zefir_allusers, zefir_currentuser, zefir_library, zefir_supervisors, zefir_projectName
 
 
 __all__ = [
@@ -79,8 +80,21 @@ class Library(QtCore.QObject):
         self._searchEnabled = True
         self._libraryWindow = libraryWindow
 
+        self._zefir_user = zefir_currentuser()
+        self._zefir_all_users = zefir_allusers()
+
         self.setPath(path)
         self.setDirty(True)
+
+    def projectName(self):
+        return zefir_projectName()
+
+    def currentUser(self):
+        return self._zefir_user
+
+    def allUsers(self):
+        return self._zefir_all_users
+
 
     def sortBy(self):
         """

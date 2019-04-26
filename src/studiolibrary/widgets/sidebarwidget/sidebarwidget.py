@@ -12,6 +12,7 @@
 import time
 import logging
 import collections
+import re
 
 from studioqt import QtGui
 from studioqt import QtCore
@@ -224,6 +225,7 @@ class SidebarWidget(QtWidgets.QTreeWidget):
         :type dataset: studioqt.Dataset
         """
         self._dataset = dataset
+        self._options['rootText'] = dataset.projectName()
         self._dataset.dataChanged.connect(self._dataChanged)
         self._dataChanged()
 
@@ -584,7 +586,76 @@ class SidebarWidget(QtWidgets.QTreeWidget):
         logger.warning("This method has been deprecated!")
         self.setData(*args, **kwargs)
 
-    def setData(self, data, root="", split=None):
+
+    def _filteredData(self):
+        """Get the list of folders to display using the filters
+        
+        Returns:
+            [type] -- [description]
+        """
+        data = {}
+
+        allusers = self.dataset().allUsers()
+        currentuser = self.dataset().currentUser()
+        undefinedUserRe = re.compile(".*/user/([a-zA-Z0-9]+$)")
+
+        queries = [{'filters': [('type', 'is', 'Folder')]}]
+
+        #display only some users
+        if False:
+            queries += [
+                {
+                        'operator': 'or',
+                        'filters': [('path', 'contains', 'global')]
+                        + [('path', 'contains', user) for user in allusers]
+                }
+            ]
+
+        items = self.dataset().findItems(queries)
+
+        for item in items:
+            path = item.path()
+            
+            if path.endswith('global'):
+                data[path] = {
+                    "bold": True,
+                    "text": "SUPERVISOR",
+                    "textColor":"rgb(150,150,255)",
+                    "expanded": True,
+                }
+            elif path.endswith('user'):
+                data[path] = {
+                    "bold": True,
+                    "text": "ANIMATORS",
+                    "textColor":"rgb(150,150,255)",
+                    "expanded": True,
+                }
+            elif path.endswith(currentuser):
+                data[path] = {
+                    "bold": True,
+                    "textColor":"rgb(255,255,150)",
+                    "expanded": True,
+                }
+            elif any([path.endswith(user) for user in allusers]):
+                data[path] = {
+                    "bold": True,
+                    "textColor":"rgb(255,150,255)",
+                    "expanded": False,
+                }
+            elif undefinedUserRe.match(path):
+                data[path] = {
+                    "bold": True,
+                    "textColor":"rgb(255,50,50)",
+                    "expanded": False,
+                }
+            else:
+                data[path] = {}
+
+        return data
+
+
+
+    def setData(self, data=None, root="", split=None):
         """
         Set the items to the given items.
 
@@ -593,6 +664,9 @@ class SidebarWidget(QtWidgets.QTreeWidget):
         :type split: str
         :rtype: None
         """
+
+        data = data or self._filteredData()
+
         settings = self.settings()
 
         self.blockSignals(True)
@@ -607,6 +681,7 @@ class SidebarWidget(QtWidgets.QTreeWidget):
         self.setSettings(settings)
 
         self.blockSignals(False)
+
 
     def addPaths(self, paths, root="", split=None):
         """
