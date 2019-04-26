@@ -55,7 +55,7 @@ class FolderUserItem(studiolibrary.LibraryItem):
             string -- user name
         """
         return self.name()[:-5]
-        
+
 
     @classmethod
     def showCreateWidget(cls, libraryWindow):
@@ -64,17 +64,18 @@ class FolderUserItem(studiolibrary.LibraryItem):
 
         :rtype: None
         """
-        path = libraryWindow.selectedFolderPath() or libraryWindow.path()
+        path = os.path.join( libraryWindow.library().path(), 'user' )
 
         name, button = studiolibrary.widgets.MessageBox.input(
             libraryWindow,
-            "Create library",
-            "Create a new library with the name:",
+            "Create User",
+            "Create a new user:",
+            libraryWindow.library().currentUser()
         )
 
-        name = name.strip()
+        name = name.strip() + ".user"
 
-        if name and button == QtWidgets.QDialogButtonBox.Ok:
+        if button == QtWidgets.QDialogButtonBox.Ok:
             path = os.path.join(path, name)
 
             item = cls(path, libraryWindow=libraryWindow)

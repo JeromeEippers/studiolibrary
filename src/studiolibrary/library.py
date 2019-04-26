@@ -19,7 +19,7 @@ import collections
 import studiolibrary
 
 from studioqt import QtCore
-from main import zefir_allusers, zefir_currentuser, zefir_library, zefir_supervisors, zefir_projectName
+from main import zefir_allusers, zefir_currentuser, zefir_library, zefir_supervisors, zefir_projectName, zefir_currentUserLibraryPath
 
 
 __all__ = [
@@ -91,6 +91,9 @@ class Library(QtCore.QObject):
 
     def currentUser(self):
         return self._zefir_user
+
+    def currentUserFolderPath(self):
+        return zefir_currentUserLibraryPath()
 
     def allUsers(self):
         return self._zefir_all_users

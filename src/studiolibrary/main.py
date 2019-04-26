@@ -14,6 +14,7 @@ import studioqt
 import studiolibrary
 import zefir
 import platform
+import os.path
 
 
 def zefir_projectName():
@@ -44,6 +45,16 @@ def zefir_library():
             rootPath = "\\\\nwave\\projects\\{0}\\LIB\\StudioLibrary\\".format(projectname)
 
         return rootPath
+
+
+def zefir_currentUserLibraryPath():
+    """return the path to the current user in the library
+    
+    Returns:
+        string -- the path to the xxx.user folder in the library
+    """
+
+    return os.path.join( os.path.join(zefir_library, 'user'), zefir_currentuser() + ".user" )
 
     
 def zefir_supervisors():

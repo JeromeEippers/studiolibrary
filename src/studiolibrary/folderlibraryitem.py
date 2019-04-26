@@ -9,7 +9,7 @@ from studioqt import QtWidgets
 
 class FolderLibraryItem(studiolibrary.LibraryItem):
 
-    RegisterOrder = 90
+    RegisterOrder = 95
     EnableNestedItems = True
 
     MenuName = "Library"
@@ -63,7 +63,7 @@ class FolderLibraryItem(studiolibrary.LibraryItem):
             "Create a new library with the name:",
         )
 
-        name = name.strip()
+        name = name.strip() + ".lib"
 
         if name and button == QtWidgets.QDialogButtonBox.Ok:
             path = os.path.join(path, name)

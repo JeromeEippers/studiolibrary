@@ -140,6 +140,16 @@ class LibraryWindow(QtWidgets.QWidget):
 
         LibraryWindow._instances = {}
 
+
+    @classmethod
+    def findRigsInScene(cls):
+        """return the list of rigs (.lib) loaded in the scene
+        
+        Returns:
+            list string -- the list of rigs
+        """
+        return []
+
     @classmethod
     def instance(
             cls,
