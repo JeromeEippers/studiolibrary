@@ -597,56 +597,76 @@ class SidebarWidget(QtWidgets.QTreeWidget):
 
         allusers = self.dataset().allUsers()
         currentuser = self.dataset().currentUser()
-        undefinedUserRe = re.compile(".*/user/([a-zA-Z0-9]+$)")
 
-        queries = [{'filters': [('type', 'is', 'Folder')]}]
+        queries = [{
+            'operator': 'or',
+            'filters': [
+                ('type', 'is', 'Folder'),
+                ('type', 'is', 'Library'),
+                ('type', 'is', 'User'),
+                ]
+        }]
 
         #display only some users
         if False:
-            queries += [
-                {
-                        'operator': 'or',
-                        'filters': [('path', 'contains', 'global')]
-                        + [('path', 'contains', user) for user in allusers]
-                }
-            ]
+            queries += [{
+                'operator': 'or',
+                'filters': [('path', 'contains', 'global')]
+                + [('path', 'contains', user) for user in allusers]
+            }]
 
         items = self.dataset().findItems(queries)
 
         for item in items:
             path = item.path()
-            
-            if path.endswith('global'):
+
+            #set the library display
+            if item.itemData()['type'] == 'Library':
                 data[path] = {
-                    "bold": True,
-                    "text": "SUPERVISOR",
-                    "textColor":"rgb(150,150,255)",
-                    "expanded": True,
+                    "text": item.name()[:-4],
+                    'iconPath': item.MenuIconPath
                 }
+
+            #set the user display
+            elif item.itemData()['type'] == 'User':
+                user = item.user()
+                data[path] = {
+                    "text": user,
+                    'iconPath': item.MenuIconPath
+                }
+                if user == 'global':
+                    data[path].update({
+                        "bold": True,
+                        "text": "SUPERVISOR",
+                        "textColor":"rgb(150,150,255)",
+                        "expanded": True,
+                    })
+                elif user == currentuser:
+                    data[path].update({
+                        "bold": True,
+                        "textColor":"rgb(255,255,150)",
+                        "expanded": True,
+                    })
+                elif user in allusers:
+                    data[path].update({
+                        "bold": True,
+                        "textColor":"rgb(255,150,255)",
+                        "expanded": False,
+                    })
+                else:
+                    data[path].update({
+                        "bold": True,
+                        "textColor":"rgb(255,50,50)",
+                        "expanded": False,
+                    })
+
+            #user
             elif path.endswith('user'):
                 data[path] = {
                     "bold": True,
                     "text": "ANIMATORS",
                     "textColor":"rgb(150,150,255)",
                     "expanded": True,
-                }
-            elif path.endswith(currentuser):
-                data[path] = {
-                    "bold": True,
-                    "textColor":"rgb(255,255,150)",
-                    "expanded": True,
-                }
-            elif any([path.endswith(user) for user in allusers]):
-                data[path] = {
-                    "bold": True,
-                    "textColor":"rgb(255,150,255)",
-                    "expanded": False,
-                }
-            elif undefinedUserRe.match(path):
-                data[path] = {
-                    "bold": True,
-                    "textColor":"rgb(255,50,50)",
-                    "expanded": False,
                 }
             else:
                 data[path] = {}
@@ -726,7 +746,7 @@ class SidebarWidget(QtWidgets.QTreeWidget):
                 item.setExpanded(True)
 
             def _recursive(parent, children, split=None):
-                for text, val in sorted(children.iteritems()):
+                for text, val in sorted(children.iteritems(), key=lambda item : item[0].lower()):
 
                     path = parent.path()
                     path = split.join([path, text])

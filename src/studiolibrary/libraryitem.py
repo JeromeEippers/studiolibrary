@@ -67,7 +67,6 @@ class LibraryItem(studiolibrary.widgets.Item):
 
     RegisterOrder = 10
     TypeIconPath = ""
-    DisplayInSidebar = False
     CreateWidgetClass = None
     PreviewWidgetClass = None
 
