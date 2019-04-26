@@ -16,6 +16,7 @@ import logging
 
 from studioqt import QtGui
 from studioqt import QtCore
+from studioqt import QtWidgets
 
 import studioqt
 import studiolibrary
@@ -68,16 +69,28 @@ class BaseItem(studiolibrary.LibraryItem):
 
         :type libraryWindow: studiolibrary.LibraryWindow
         """
-        widget = cls.CreateWidgetClass(item=cls(), parent=libraryWindow)
 
+        #we can only create items inside of a library, so let's make sure we are inside one
         path = libraryWindow.selectedFolderPath()
+        if '.lib' not in path:
+            studiolibrary.widgets.MessageBox.warning(
+                libraryWindow,
+                "Missing Library",
+                "You need to be inside a library to create this item",
+                buttons = QtWidgets.QDialogButtonBox.Ok
+            )
 
-        widget.folderFrame().hide()
-        widget.setFolderPath(path)
-        widget.setLibraryWindow(libraryWindow)
+        else:
+            widget = cls.CreateWidgetClass(item=cls(), parent=libraryWindow)
 
-        libraryWindow.setCreateWidget(widget)
-        libraryWindow.folderSelectionChanged.connect(widget.setFolderPath)
+            path = libraryWindow.selectedFolderPath()
+
+            widget.folderFrame().hide()
+            widget.setFolderPath(path)
+            widget.setLibraryWindow(libraryWindow)
+
+            libraryWindow.setCreateWidget(widget)
+            libraryWindow.folderSelectionChanged.connect(widget.setFolderPath)
 
     def __init__(self, *args, **kwargs):
         """

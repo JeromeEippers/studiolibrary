@@ -88,7 +88,7 @@ def findRoot(paths, separator=None):
 
     tokens = path.split(separator)
 
-    for i, token in enumerate(tokens):
+    for i, _ in enumerate(tokens):
         root = separator.join(tokens[:i+1])
         match = True
 
