@@ -1319,7 +1319,8 @@ class LibraryWindow(QtWidgets.QWidget):
                     editMenu.addAction(action)
 
         menu.addSeparator()
-        menu.addMenu(self.createSettingsMenu())
+        #remove settings from right click menu
+        #menu.addMenu(self.createSettingsMenu())
 
         return menu
 

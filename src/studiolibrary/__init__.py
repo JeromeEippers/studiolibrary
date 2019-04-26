@@ -123,6 +123,8 @@ from studiolibrary.librarywindow import LibraryWindow
 from studiolibrary.main import main
 
 import studiolibrary.folderitem
+import studiolibrary.folderlibraryitem
+import studiolibrary.folderuseritem
 
 # Wrapping the following functions for convenience
 app = studioqt.app

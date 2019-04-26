@@ -23,7 +23,6 @@ class FolderItem(studiolibrary.LibraryItem):
 
     RegisterOrder = 100
     EnableNestedItems = True
-    DisplayInSidebar = True
 
     MenuName = "Folder"
     MenuOrder = 1
