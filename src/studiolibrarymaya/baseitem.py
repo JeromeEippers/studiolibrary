@@ -15,6 +15,7 @@ import shutil
 import logging
 
 from studioqt import QtGui
+from studioqt import QtCore
 from studioqt import QtWidgets
 
 import studioqt
@@ -31,7 +32,6 @@ try:
 except ImportError as error:
     print(error)
 
-
 __all__ = [
     "BaseItem",
 ]
@@ -45,7 +45,15 @@ class NamespaceOption:
     FromSelection = "selection"
 
 
+class BaseItemSignals(QtCore.QObject):
+    """"""
+    loadValueChanged = QtCore.Signal(object, object)
+
+
 class BaseItem(studiolibrary.LibraryItem):
+    _baseItemSignals = BaseItemSignals()
+
+    loadValueChanged = _baseItemSignals.loadValueChanged
 
     """Base class for anim, pose, mirror and sets transfer items."""
     CreateWidgetClass = basesavewidget.BaseSaveWidget
@@ -94,6 +102,7 @@ class BaseItem(studiolibrary.LibraryItem):
         """
         studiolibrary.LibraryItem.__init__(self, *args, **kwargs)
 
+        self._currentLoadValues = {}
         self._currentLoadSchema = []
         self._currentSaveSchema = []
 
@@ -104,10 +113,36 @@ class BaseItem(studiolibrary.LibraryItem):
         self._transferObject = None
         self._transferBasename = None
 
+    def emitLoadValueChanged(self, field, value):
+        """
+        Emit the load value changed to be validated.
+
+        :type field: str
+        :type value: object
+        """
+        self.loadValueChanged.emit(field, value)
+
+    def loadValidator(self, **values):
+        """
+        Called when the load fields change.
+
+        :type values: dict
+        """
+        self._currentLoadValues = values
+
+    def currentLoadValue(self, name):
+        """
+        Get the current field value for the given name.
+
+        :type name: str
+        :rtype: object
+        """
+        return self._currentLoadValues.get(name)
+
     def info(self):
         """
         Get the info to display to user.
-        
+
         :rtype: list[dict]
         """
         ctime = self.ctime()
@@ -196,8 +231,8 @@ class BaseItem(studiolibrary.LibraryItem):
     def optionsFromSettings(self):
         """
         Get the options from the user settings.
-        
-        :rtype: dict 
+
+        :rtype: dict
         """
         settings = self.settings()
         settings = settings.get(self.__class__.__name__, {})
@@ -218,7 +253,7 @@ class BaseItem(studiolibrary.LibraryItem):
     def optionsChanged(self, **options):
         """
         Triggered when the user changes the options.
-        
+
         :type options: dict
         """
         settings = self.settings()
@@ -232,15 +267,15 @@ class BaseItem(studiolibrary.LibraryItem):
     def currentLoadSchema(self):
         """
         Get the current options set by the user.
-        
-        :rtype: dict 
+
+        :rtype: dict
         """
         return self._currentLoadSchema or self.optionsFromSettings()
 
     def defaultOptions(self):
         """
         Triggered when the user changes the options.
-        
+
         :rtype: dict
         """
         options = {}
@@ -382,10 +417,10 @@ class BaseItem(studiolibrary.LibraryItem):
         namespaces = self.namespaces()
 
         menu = setsmenu.SetsMenu(
-                item=self,
-                parent=parent,
-                namespaces=namespaces,
-                enableSelectContent=enableSelectContent,
+            item=self,
+            parent=parent,
+            namespaces=namespaces,
+            enableSelectContent=enableSelectContent,
         )
 
         return menu
@@ -499,8 +534,8 @@ class BaseItem(studiolibrary.LibraryItem):
         :rtype: NamespaceOption
         """
         namespaceOption = self.settings().get(
-                "namespaceOption",
-                NamespaceOption.FromSelection
+            "namespaceOption",
+            NamespaceOption.FromSelection
         )
         return namespaceOption
 
@@ -572,7 +607,7 @@ class BaseItem(studiolibrary.LibraryItem):
 
     def loadFromCurrentOptions(self):
         """Load the mirror table using the settings for this item."""
-        kwargs = self.currentLoadSchema()
+        kwargs = self._currentLoadValues
         namespaces = self.namespaces()
         objects = maya.cmds.ls(selection=True) or []
 
