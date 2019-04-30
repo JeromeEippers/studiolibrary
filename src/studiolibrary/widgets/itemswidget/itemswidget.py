@@ -26,6 +26,7 @@ from .itemdelegate import ItemDelegate
 from ..toastwidget import ToastWidget
 from ..slideraction import SliderAction
 from ..separatoraction import SeparatorAction
+from ..lineeditaction import LineEditAction
 
 logger = logging.getLogger(__name__)
 

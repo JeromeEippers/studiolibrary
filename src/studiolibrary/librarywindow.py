@@ -303,6 +303,12 @@ class LibraryWindow(QtWidgets.QWidget):
 
         self._menuBarWidget.addWidget(self._searchWidget)
 
+        name = "Folders"
+        icon = studiolibrary.resource().icon("filter_folder")
+        icon.setColor(iconColor)
+        tip = "Filter the folders by user and rigs."
+        self.addMenuBarAction(name, icon, tip, callback=self.showFolderFilterMenu)
+
         name = "Filters"
         icon = studiolibrary.resource().icon("filter")
         icon.setColor(iconColor)
@@ -951,6 +957,13 @@ class LibraryWindow(QtWidgets.QWidget):
             action.triggered.connect(_callback)
 
         return action
+
+    def showFolderFilterMenu(self):
+        menu = self.sidebarWidget().createFolderFilterMenu(self)
+        widget = self.menuBarWidget().findToolButton("Folders")
+
+        point = widget.mapToGlobal(QtCore.QPoint(0, widget.height()))
+        menu.exec_(point)
 
     def showFilterByMenu(self):
         """

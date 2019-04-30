@@ -78,12 +78,14 @@ class FolderUserItem(studiolibrary.LibraryItem):
         if button == QtWidgets.QDialogButtonBox.Ok:
             path = os.path.join(path, name)
 
-            item = cls(path, libraryWindow=libraryWindow)
-            item.save(path)
+            if os.path.exists(path) == False:
 
-            if libraryWindow:
-                libraryWindow.refresh()
-                libraryWindow.selectFolderPath(path)
+                item = cls(path, libraryWindow=libraryWindow)
+                item.save(path)
+
+                if libraryWindow:
+                    libraryWindow.refresh()
+                    libraryWindow.selectFolderPath(path)
 
     def createItemData(self):
         """Overriding this method to force the item type to library"""

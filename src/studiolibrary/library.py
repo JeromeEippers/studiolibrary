@@ -679,7 +679,7 @@ class Library(QtCore.QObject):
                 {
                     'operator': 'or',
                     'filters': [
-                        ('folder', 'is' '/library/proj/test'),
+                        ('folder', 'is', '/library/proj/test'),
                         ('folder', 'startswith', '/library/proj/test'),
                     ]
                 },
@@ -690,52 +690,75 @@ class Library(QtCore.QObject):
                         ('path', 'contains', 'run'),
                     ]
                 }
+                ,
+                {
+                    'if': ('type', 'is', 'Folder')
+                    'operator': 'and',
+                    'filters': [
+                        ('path', 'contains' 'test'),
+                        ('path', 'contains', 'run'),
+                    ]
+                }
             ]
             
             print(library.find(queries))
         """
+
+        def _test(data, key, cond, value):
+            match = False
+
+            if key == '*':
+                itemValue = unicode(data)
+            else:
+                itemValue = data.get(key)
+
+            if isinstance(value, basestring):
+                value = value.lower()
+
+            if isinstance(itemValue, basestring):
+                itemValue = itemValue.lower()
+
+            if not itemValue:
+                match = False
+
+            elif cond == 'contains':
+                match = value in itemValue
+
+            elif cond == 'not_contains':
+                match = value not in itemValue
+
+            elif cond == 'is':
+                match = value == itemValue
+
+            elif cond == 'not':
+                match = value != itemValue
+
+            elif cond == 'startswith':
+                match = itemValue.startswith(value)
+
+            return match
+
+
         matches = []
 
         for query in queries:
 
             filters = query.get('filters')
             operator = query.get('operator', 'and')
+            conditionalfilter = query.get('if')
 
             if not filters:
                 continue
+
+            if conditionalfilter:
+                if _test(data, conditionalfilter[0], conditionalfilter[1], conditionalfilter[2]) == False:
+                    continue
 
             match = False
 
             for key, cond, value in filters:
 
-                if key == '*':
-                    itemValue = unicode(data)
-                else:
-                    itemValue = data.get(key)
-
-                if isinstance(value, basestring):
-                    value = value.lower()
-
-                if isinstance(itemValue, basestring):
-                    itemValue = itemValue.lower()
-
-                if not itemValue:
-                    match = False
-
-                elif cond == 'contains':
-                    match = value in itemValue
-
-                elif cond == 'not_contains':
-                    match = value not in itemValue
-
-                elif cond == 'is':
-                    match = value == itemValue
-
-                elif cond == 'not':
-                    match = value != itemValue
-
-                elif cond == 'startswith':
-                    match = itemValue.startswith(value)
+                match = _test(data, key, cond, value)
 
                 if operator == 'or' and match:
                     break

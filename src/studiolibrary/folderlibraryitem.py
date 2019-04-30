@@ -57,23 +57,35 @@ class FolderLibraryItem(studiolibrary.LibraryItem):
         """
         path = libraryWindow.selectedFolderPath() or libraryWindow.path()
 
-        name, button = studiolibrary.widgets.MessageBox.input(
-            libraryWindow,
-            "Create library",
-            "Create a new library with the name:",
-        )
+        #we can only create a library inside a user,
+        #so let's make sure we are inside one
+        if '.user' not in path:
+            studiolibrary.widgets.MessageBox.warning(
+                libraryWindow,
+                "Missing User",
+                "You need to be inside a user to create a library",
+                buttons = QtWidgets.QDialogButtonBox.Ok
+            )
 
-        name = name.strip() + ".lib"
+        else:
 
-        if name and button == QtWidgets.QDialogButtonBox.Ok:
-            path = os.path.join(path, name)
+            name, button = studiolibrary.widgets.MessageBox.input(
+                libraryWindow,
+                "Create library",
+                "Create a new library with the name:",
+            )
 
-            item = cls(path, libraryWindow=libraryWindow)
-            item.save(path)
+            name = name.strip() + ".lib"
 
-            if libraryWindow:
-                libraryWindow.refresh()
-                libraryWindow.selectFolderPath(path)
+            if name and button == QtWidgets.QDialogButtonBox.Ok:
+                path = os.path.join(path, name)
+
+                item = cls(path, libraryWindow=libraryWindow)
+                item.save(path)
+
+                if libraryWindow:
+                    libraryWindow.refresh()
+                    libraryWindow.selectFolderPath(path)
 
     def createItemData(self):
         """Overriding this method to force the item type to library"""

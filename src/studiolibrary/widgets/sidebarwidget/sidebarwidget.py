@@ -13,6 +13,7 @@ import time
 import logging
 import collections
 import re
+from functools import partial
 
 from studioqt import QtGui
 from studioqt import QtCore
@@ -21,6 +22,10 @@ from studioqt import QtWidgets
 import studioqt
 
 from sidebarwidgetitem import SidebarWidgetItem
+from ..separatoraction import SeparatorAction
+from ..lineeditaction import LineEditAction
+
+
 
 
 __all__ = ["SidebarWidget"]
@@ -105,6 +110,19 @@ def findRoot(paths, separator=None):
     return result
 
 
+class SideBarDisplayUser(object):
+    CURRENT = 0
+    USER_DEFINED = 1
+    ACTIVE_USERS = 2
+    ALL = 4
+
+class SideBarDisplayLibs(object):
+    FROM_SCENE = 0
+    USER_DEFINED = 1
+    ALL = 2
+
+
+
 class SidebarWidget(QtWidgets.QTreeWidget):
 
     itemDropped = QtCore.Signal(object)
@@ -130,6 +148,13 @@ class SidebarWidget(QtWidgets.QTreeWidget):
                 'queries': [{'filters': [('type', 'is', 'Folder')]}]
             }
 
+        self._displayUser = SideBarDisplayUser.CURRENT
+        self._displayLibs = SideBarDisplayLibs.FROM_SCENE
+        self._displayUsersDefined = ""
+        self._displayLibsDefined=  ""
+        self._displayUserQuery = {}
+        self._displayLibsQuery = {}
+
         self.itemExpanded.connect(self.update)
         self.itemCollapsed.connect(self.update)
 
@@ -141,6 +166,8 @@ class SidebarWidget(QtWidgets.QTreeWidget):
         self.setSelectionMode(QtWidgets.QTreeWidget.ExtendedSelection)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerPixel)
+
+        
 
     def clear(self):
         """Clear all the items from the tree widget."""
@@ -605,15 +632,24 @@ class SidebarWidget(QtWidgets.QTreeWidget):
                 ('type', 'is', 'Library'),
                 ('type', 'is', 'User'),
                 ]
-        }]
+            },
+            {
+            'if':('type', 'is', 'Folder'),
+            'operator': 'or',
+            'filters': [
+                ('path', 'contains', '.lib'),
+                ]
+            }
+        ]
 
-        #display only some users
-        if False:
-            queries += [{
-                'operator': 'or',
-                'filters': [('path', 'contains', 'global')]
-                + [('path', 'contains', user) for user in allusers]
-            }]
+        #check if we have internal filters
+        if self._displayLibsQuery :
+            queries += [self._displayLibsQuery]
+
+        #check if we have internal filters
+        if self._displayUserQuery :
+            queries += [self._displayUserQuery]
+
 
         items = self.dataset().findItems(queries)
 
@@ -763,6 +799,89 @@ class SidebarWidget(QtWidgets.QTreeWidget):
             _recursive(item, data[key], split=split)
 
         self.update()
+
+    def displayLibs(self):
+        return self._displayLibs
+
+    def setLibraryFilter(self, flag):
+        self._displayLibs = flag
+
+        if self._displayLibs == SideBarDisplayLibs.FROM_SCENE:
+            self._displayLibsQuery = {}
+
+        elif self._displayLibs == SideBarDisplayLibs.USER_DEFINED:
+            if self._displayLibsDefined and self._displayLibsDefined.isspace() == False:
+                self._displayLibsQuery = {   
+                        'if': ('path', 'contains','.lib'),
+                        'operator': 'or',
+                        'filters': [('path', 'contains', name+'.lib') for name in self._displayLibsDefined.split()]
+                    } 
+                
+
+
+        else:
+            self._displayLibsQuery = {} 
+
+        #remove previous query
+        self.dataset().removeQuery('FolderFilterLibrary')
+
+        #add query and force search
+        if self._displayLibsQuery :
+            self._displayLibsQuery['name'] = 'FolderFilterLibrary'
+            self.dataset().addQuery(self._displayLibsQuery)
+            self.dataset().search()
+
+        #redraw this view
+        self.setData()
+                
+        
+
+
+
+    def setLibaryFilterText(self, value):
+        if value != self._displayLibsDefined:
+            self._displayLibsDefined = value
+            self.setLibraryFilter(SideBarDisplayLibs.USER_DEFINED)
+        
+
+
+    def createFolderFilterMenu(self, owner):
+
+        menu = QtWidgets.QMenu("Folder Filter", owner)
+
+        action = SeparatorAction("Library Filter", menu)
+        menu.addAction(action)
+
+        action = QtWidgets.QAction("From Scene", menu)
+        action.setCheckable(True)
+        action.setChecked(self.displayLibs() == SideBarDisplayLibs.FROM_SCENE)
+        callback = partial(self.setLibraryFilter, SideBarDisplayLibs.FROM_SCENE)
+        action.triggered.connect(callback)
+        menu.addAction(action)
+
+        action = QtWidgets.QAction("All libraries", menu)
+        action.setCheckable(True)
+        action.setChecked(self.displayLibs() == SideBarDisplayLibs.ALL)
+        callback = partial(self.setLibraryFilter, SideBarDisplayLibs.ALL)
+        action.triggered.connect(callback)
+        menu.addAction(action)
+
+        action = QtWidgets.QAction("User defined", menu)
+        action.setCheckable(True)
+        action.setChecked(self.displayLibs() == SideBarDisplayLibs.USER_DEFINED)
+        callback = partial(self.setLibraryFilter, SideBarDisplayLibs.USER_DEFINED)
+        action.triggered.connect(callback)
+        menu.addAction(action)
+
+        action = LineEditAction("Library User Defined", menu)
+        action.line().setText(self._displayLibsDefined)
+        action.valueChanged.connect(self.setLibaryFilterText)
+        menu.addAction(action)
+
+        action = SeparatorAction("Users Filter", menu)
+        menu.addAction(action)
+        
+        return menu
 
 
 class ExampleWindow(QtWidgets.QWidget):
