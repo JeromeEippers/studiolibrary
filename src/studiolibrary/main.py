@@ -65,9 +65,11 @@ def zefir_supervisors():
     """
     context = zefir.get_context()
     if context != None:
+        animation = context.filter_all_teams({'code':'animation'})[0]
+
         return [user.code for user in context.filter_all_users()
                  if ( user.is_supervisor == True
-                 and 'animation' in user.teams )]
+                 and animation in user.teams )]
     return []
 
 
@@ -127,6 +129,8 @@ def main(*args, **kwargs):
 
     if "superusers" not in kwargs:
         kwargs["superusers"] = zefir_supervisors()
+
+    kwargs["unlockRegExp"] = ".*(user/{user}).*".format(user=zefir_currentuser())
 
     if studiolibrary.isMaya():
         import studiolibrarymaya
