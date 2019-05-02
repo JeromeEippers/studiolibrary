@@ -111,12 +111,16 @@ def findRoot(paths, separator=None):
 
 
 class SideBarDisplayUser(object):
+    """Enum for the display user
+    """
     CURRENT = 0
     USER_DEFINED = 1
     ACTIVE_USERS = 2
     ALL = 4
 
 class SideBarDisplayLibs(object):
+    """Enum for the display libs
+    """
     FROM_SCENE = 0
     USER_DEFINED = 1
     ALL = 2
@@ -148,11 +152,11 @@ class SidebarWidget(QtWidgets.QTreeWidget):
                 'queries': [{'filters': [('type', 'is', 'Folder')]}]
             }
 
-        self._displayUser = SideBarDisplayUser.CURRENT
+        self._displayUsers = SideBarDisplayUser.CURRENT
         self._displayLibs = SideBarDisplayLibs.FROM_SCENE
         self._displayUsersDefined = ""
         self._displayLibsDefined=  ""
-        self._displayUserQuery = {}
+        self._displayUsersQuery = {}
         self._displayLibsQuery = {}
 
         self.itemExpanded.connect(self.update)
@@ -254,6 +258,8 @@ class SidebarWidget(QtWidgets.QTreeWidget):
         self._dataset = dataset
         self._options['rootText'] = dataset.projectName()
         self._dataset.dataChanged.connect(self._dataChanged)
+        self.setUserFilter(self._displayUsers, False)
+        self.setLibraryFilter(self._displayLibs, False)
         self._dataChanged()
 
     def dataset(self):
@@ -637,6 +643,7 @@ class SidebarWidget(QtWidgets.QTreeWidget):
             'if':('type', 'is', 'Folder'),
             'operator': 'or',
             'filters': [
+                ('path', 'endswith', 'user'),
                 ('path', 'contains', '.lib'),
                 ]
             }
@@ -647,8 +654,8 @@ class SidebarWidget(QtWidgets.QTreeWidget):
             queries += [self._displayLibsQuery]
 
         #check if we have internal filters
-        if self._displayUserQuery :
-            queries += [self._displayUserQuery]
+        if self._displayUsersQuery :
+            queries += [self._displayUsersQuery]
 
 
         items = self.dataset().findItems(queries)
@@ -680,19 +687,19 @@ class SidebarWidget(QtWidgets.QTreeWidget):
                 elif user == currentuser:
                     data[path].update({
                         "bold": True,
-                        "textColor":"rgb(255,255,150)",
+                        "textColor":"rgb(255,255,0)",
                         "expanded": True,
                     })
                 elif user in allusers:
                     data[path].update({
                         "bold": True,
-                        "textColor":"rgb(255,150,255)",
+                        "textColor":"rgb(255,120,0)",
                         "expanded": False,
                     })
                 else:
                     data[path].update({
                         "bold": True,
-                        "textColor":"rgb(255,50,50)",
+                        "textColor":"rgb(150,150,150)",
                         "expanded": False,
                     })
 
@@ -803,11 +810,17 @@ class SidebarWidget(QtWidgets.QTreeWidget):
     def displayLibs(self):
         return self._displayLibs
 
-    def setLibraryFilter(self, flag):
+    def setLibraryFilter(self, flag, forceSearch=True):
         self._displayLibs = flag
 
+        self._displayLibsQuery = {} 
+
         if self._displayLibs == SideBarDisplayLibs.FROM_SCENE:
-            self._displayLibsQuery = {}
+            self._displayLibsQuery = {   
+                    'if': ('path', 'contains','.lib'),
+                    'operator': 'or',
+                    'filters': [('path', 'contains', name.split('/')[-1]+'.lib') for name in self.dataset().findRigsInScene()]
+                } 
 
         elif self._displayLibs == SideBarDisplayLibs.USER_DEFINED:
             if self._displayLibsDefined and self._displayLibsDefined.isspace() == False:
@@ -816,34 +829,81 @@ class SidebarWidget(QtWidgets.QTreeWidget):
                         'operator': 'or',
                         'filters': [('path', 'contains', name+'.lib') for name in self._displayLibsDefined.split()]
                     } 
-                
 
+        if self.dataset():
+            #remove previous query
+            self.dataset().removeQuery('FolderFilterLibrary')
 
-        else:
-            self._displayLibsQuery = {} 
+            #add query and force search
+            if self._displayLibsQuery :
+                self._displayLibsQuery['name'] = 'FolderFilterLibrary'
+                self.dataset().addQuery(self._displayLibsQuery)
 
-        #remove previous query
-        self.dataset().removeQuery('FolderFilterLibrary')
-
-        #add query and force search
-        if self._displayLibsQuery :
-            self._displayLibsQuery['name'] = 'FolderFilterLibrary'
-            self.dataset().addQuery(self._displayLibsQuery)
-            self.dataset().search()
-
-        #redraw this view
-        self.setData()
+            if forceSearch :
+                self.dataset().search()
+                self.setData()
                 
         
-
-
-
     def setLibaryFilterText(self, value):
         if value != self._displayLibsDefined:
             self._displayLibsDefined = value
             self.setLibraryFilter(SideBarDisplayLibs.USER_DEFINED)
         
+    def displayUsers(self):
+        return self._displayUsers
 
+    def setUserFilter(self, flag, forceSearch=True):
+        self._displayUsers = flag
+
+        self._displayUsersQuery = {} 
+
+        if self._displayUsers == SideBarDisplayUser.CURRENT:
+            self._displayUsersQuery = {   
+                'if': ('path', 'contains','.user'),
+                'operator': 'or',
+                'filters':  [('path', 'contains', 'global.user')] +
+                            [('path', 'contains', '{0}.user'.format(self.dataset().currentUser()))]
+            } 
+        elif self._displayUsers == SideBarDisplayUser.ACTIVE_USERS:
+            self._displayUsersQuery = {   
+                'if': ('path', 'contains','.user'),
+                'operator': 'or',
+                'filters':  [('path', 'contains', 'global.user')] +
+                            [('path', 'contains', name+'.user') for name in self.dataset().allUsers()]
+            } 
+        elif self._displayUsers == SideBarDisplayUser.USER_DEFINED:
+            if self._displayUsersDefined and self._displayUsersDefined.isspace() == False:
+                self._displayUsersQuery = {   
+                        'if': ('path', 'contains','.user'),
+                        'operator': 'or',
+                        'filters':  [('path', 'contains', 'global.user')] +
+                                    [('path', 'contains', '{0}.user'.format(self.dataset().currentUser()))] + 
+                                    [('path', 'contains', name+'.user') for name in self._displayUsersDefined.split()]
+                    } 
+
+        if self.dataset():
+            #remove previous query
+            self.dataset().removeQuery('FolderFilterUser')
+
+            #add query and force search
+            if self._displayUsersQuery :
+                self._displayUsersQuery['name'] = 'FolderFilterUser'
+                self.dataset().addQuery(self._displayUsersQuery)
+
+            if forceSearch:
+                self.dataset().search()
+                self.setData()
+
+
+    def setUsersFilterText(self, value):
+        if value != self._displayUsersDefined:
+            self._displayUsersDefined = value
+            self.setUserFilter(SideBarDisplayUser.USER_DEFINED)
+
+    def isFilterActive(self):
+        return (
+             self._displayLibs != SideBarDisplayLibs.FROM_SCENE
+             or self._displayUsers != SideBarDisplayUser.CURRENT )
 
     def createFolderFilterMenu(self, owner):
 
@@ -852,7 +912,7 @@ class SidebarWidget(QtWidgets.QTreeWidget):
         action = SeparatorAction("Library Filter", menu)
         menu.addAction(action)
 
-        action = QtWidgets.QAction("From Scene", menu)
+        action = QtWidgets.QAction("Active Entity", menu)
         action.setCheckable(True)
         action.setChecked(self.displayLibs() == SideBarDisplayLibs.FROM_SCENE)
         callback = partial(self.setLibraryFilter, SideBarDisplayLibs.FROM_SCENE)
@@ -873,12 +933,45 @@ class SidebarWidget(QtWidgets.QTreeWidget):
         action.triggered.connect(callback)
         menu.addAction(action)
 
-        action = LineEditAction("Library User Defined", menu)
+        action = LineEditAction("Libraries Name", menu)
         action.line().setText(self._displayLibsDefined)
         action.valueChanged.connect(self.setLibaryFilterText)
         menu.addAction(action)
 
         action = SeparatorAction("Users Filter", menu)
+        menu.addAction(action)
+
+        action = QtWidgets.QAction("Only [{0}]".format(self.dataset().currentUser()), menu)
+        action.setCheckable(True)
+        action.setChecked(self.displayUsers() == SideBarDisplayUser.CURRENT)
+        callback = partial(self.setUserFilter, SideBarDisplayUser.CURRENT)
+        action.triggered.connect(callback)
+        menu.addAction(action)
+
+        action = QtWidgets.QAction("All Active Users", menu)
+        action.setCheckable(True)
+        action.setChecked(self.displayUsers() == SideBarDisplayUser.ACTIVE_USERS)
+        callback = partial(self.setUserFilter, SideBarDisplayUser.ACTIVE_USERS)
+        action.triggered.connect(callback)
+        menu.addAction(action)
+
+        action = QtWidgets.QAction("All Users", menu)
+        action.setCheckable(True)
+        action.setChecked(self.displayUsers() == SideBarDisplayUser.ALL)
+        callback = partial(self.setUserFilter, SideBarDisplayUser.ALL)
+        action.triggered.connect(callback)
+        menu.addAction(action)
+
+        action = QtWidgets.QAction("User Defined", menu)
+        action.setCheckable(True)
+        action.setChecked(self.displayUsers() == SideBarDisplayUser.USER_DEFINED)
+        callback = partial(self.setUserFilter, SideBarDisplayUser.USER_DEFINED)
+        action.triggered.connect(callback)
+        menu.addAction(action)
+
+        action = LineEditAction("Users Name", menu)
+        action.line().setText(self._displayUsersDefined)
+        action.valueChanged.connect(self.setUsersFilterText)
         menu.addAction(action)
         
         return menu

@@ -142,15 +142,6 @@ class LibraryWindow(QtWidgets.QWidget):
 
 
     @classmethod
-    def findRigsInScene(cls):
-        """return the list of rigs (.lib) loaded in the scene
-        
-        Returns:
-            list string -- the list of rigs
-        """
-        return []
-
-    @classmethod
     def instance(
             cls,
             name="",
@@ -417,6 +408,7 @@ class LibraryWindow(QtWidgets.QWidget):
 
         self.updateViewButton()
         self.updateFiltersButton()
+        self.updateFolderFiltersButton()
         self.updatePreviewWidget()
 
         if path:
@@ -788,15 +780,15 @@ class LibraryWindow(QtWidgets.QWidget):
         :rtype: QtWidgets.QMenu
         """
 
-        path = self.selectedFolderPath()
+        paths = self.selectedFolderPaths()
 
         items = []
 
-        if path:
+        for path in paths:
             item = studiolibrary.itemFromPath(path, libraryWindow=self)
 
             if item:
-                items = [item]
+                items.append(item)
                 self._item_ = item
 
         return self.createItemContextMenu(items)
@@ -964,6 +956,7 @@ class LibraryWindow(QtWidgets.QWidget):
 
         point = widget.mapToGlobal(QtCore.QPoint(0, widget.height()))
         menu.exec_(point)
+        self.updateFolderFiltersButton()
 
     def showFilterByMenu(self):
         """
@@ -1319,7 +1312,7 @@ class LibraryWindow(QtWidgets.QWidget):
 
         if items:
             item = items[-1]
-            item.contextMenu(menu)
+            item.contextMenu(menu, items)
 
         if not self.isLocked():
             menu.addMenu(self.createNewItemMenu())
@@ -1329,7 +1322,7 @@ class LibraryWindow(QtWidgets.QWidget):
                 editMenu.setTitle("Edit")
                 menu.addMenu(editMenu)
 
-                item.contextEditMenu(editMenu)
+                item.contextEditMenu(editMenu, items)
 
                 if self.trashEnabled():
                     editMenu.addSeparator()
@@ -1853,6 +1846,7 @@ class LibraryWindow(QtWidgets.QWidget):
         self.itemsWidget().setToastEnabled(True)
 
         self.updateFiltersButton()
+        self.updateFolderFiltersButton()
 
     def updateSettings(self, settings):
         """
@@ -2624,6 +2618,39 @@ class LibraryWindow(QtWidgets.QWidget):
             icon.setColor(self.iconColor())
 
         action.setIcon(icon)
+
+    def updateFolderFiltersButton(self):
+        """Update the icon for the folder filters menu."""
+
+        action = self.menuBarWidget().findAction("Folders")
+
+        if self.sidebarWidget().isFilterActive():
+            icon = studiolibrary.resource().icon("filter_folder")
+            icon.setColor(self.iconColor())
+            icon.setBadge(18, 1, 9, 9, color=self.ICON_BADGE_COLOR)
+        else:
+            icon = studiolibrary.resource().icon("filter_folder")
+            icon.setColor(self.iconColor())
+
+        action.setIcon(icon)
+
+    def setFolderFilterLibraryText(self, text):
+        """Update the folder filter
+        
+        Arguments:
+            text {str} -- the name of the libraries to display
+        """
+        self.sidebarWidget().setLibaryFilterText(text)
+        self.updateFolderFiltersButton()
+
+    def setFolderFilterUserText(self, text):
+        """Update the folder filter
+        
+        Arguments:
+            text {str} -- the name of the users to display
+        """
+        self.sidebarWidget().setUsersFilterText(text)
+        self.updateFolderFiltersButton()
 
     def isRecursiveSearchEnabled(self):
         """

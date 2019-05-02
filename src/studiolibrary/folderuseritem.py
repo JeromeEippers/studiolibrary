@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from functools import partial
 
 import studiolibrary
 import studiolibrary.widgets
@@ -101,6 +102,29 @@ class FolderUserItem(studiolibrary.LibraryItem):
         """Adding this method to avoid NotImpementedError."""
         pass
 
+    def contextMenu(self, menu, items=None):
+        """
+        Called when the user right clicks on the item.
+
+        :type menu: QtWidgets.QMenu
+        :type items: list[LibraryItem]
+        :rtype: None
+        """
+        callback = partial(self._filterUsers, [item for item in items if isinstance(item, FolderUserItem)])
+
+        action = QtWidgets.QAction("Display only selected users", menu)
+        action.triggered.connect(callback)
+        menu.addAction(action)
+
+        super(FolderUserItem, self).contextMenu(menu, items)
+
+    def _filterUsers(self, items):
+        """callback when filtering with the menu
+        
+        Arguments:
+            items {list of items} -- list of FolderLibraryItems
+        """
+        self.libraryWindow().setFolderFilterUserText(" ".join([item.name()[:-5] for item in items]))
     
 
 

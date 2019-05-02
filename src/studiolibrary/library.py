@@ -98,6 +98,13 @@ class Library(QtCore.QObject):
     def allUsers(self):
         return self._zefir_all_users
 
+    def findRigsInScene(self):
+        """return the list of rigs (.lib) loaded in the scene
+        
+        Returns:
+            list string -- the list of rigs
+        """
+        return []
 
     def sortBy(self):
         """
@@ -736,10 +743,11 @@ class Library(QtCore.QObject):
             elif cond == 'startswith':
                 match = itemValue.startswith(value)
 
+            elif cond == 'endswith':
+                match = itemValue.endswith(value)
+
             return match
 
-
-        matches = []
 
         for query in queries:
 
@@ -766,9 +774,10 @@ class Library(QtCore.QObject):
                 if operator == 'and' and not match:
                     break
 
-            matches.append(match)
+            if match == False:
+                return False
 
-        return all(matches)
+        return True
 
     @staticmethod
     def sorted(items, sortBy):

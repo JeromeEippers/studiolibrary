@@ -1,9 +1,9 @@
 import os
 from datetime import datetime
+from functools import partial
 
 import studiolibrary
 import studiolibrary.widgets
-
 from studioqt import QtWidgets
 
 
@@ -45,6 +45,10 @@ class FolderLibraryItem(studiolibrary.LibraryItem):
             {
                 "name": "path",
                 "value": self.path()
+            },
+            {
+                "name": "library id",
+                "value": self.itemData()['lib_id']
             }
         ]
 
@@ -91,6 +95,7 @@ class FolderLibraryItem(studiolibrary.LibraryItem):
         """Overriding this method to force the item type to library"""
         itemData = super(FolderLibraryItem, self).createItemData()
         itemData['type'] = "Library"
+        itemData['lib_id'] = itemData['path'].split('.user')[-1].split('.lib')[0]
         return itemData
 
     def doubleClicked(self):
@@ -100,6 +105,30 @@ class FolderLibraryItem(studiolibrary.LibraryItem):
     def write(self, *args, **kwargs):
         """Adding this method to avoid NotImpementedError."""
         pass
+
+    def contextMenu(self, menu, items=None):
+        """
+        Called when the user right clicks on the item.
+
+        :type menu: QtWidgets.QMenu
+        :type items: list[LibraryItem]
+        :rtype: None
+        """
+        callback = partial(self._filterLibraries, [item for item in items if isinstance(item, FolderLibraryItem)])
+
+        action = QtWidgets.QAction("Display only selected libraries", menu)
+        action.triggered.connect(callback)
+        menu.addAction(action)
+
+        super(FolderLibraryItem, self).contextMenu(menu, items)
+
+    def _filterLibraries(self, items):
+        """callback when filtering with the menu
+        
+        Arguments:
+            items {list of items} -- list of FolderLibraryItems
+        """
+        self.libraryWindow().setFolderFilterLibraryText(" ".join([item.name()[:-4] for item in items]))
 
 
 studiolibrary.registerItem(FolderLibraryItem)

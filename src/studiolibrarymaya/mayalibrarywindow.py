@@ -15,6 +15,7 @@ import logging
 
 import studiolibrary
 import studiolibrarymaya
+from . import mayalibrary
 
 import maya.cmds
 from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
@@ -25,15 +26,8 @@ logger = logging.getLogger(__name__)
 
 class MayaLibraryWindow(MayaQWidgetDockableMixin, studiolibrary.LibraryWindow):
 
-    @classmethod
-    def findRigsInScene(cls):
-        """return the list of rigs (.lib) loaded in the scene
-        
-        Returns:
-            list string -- the list of rigs
-        """
-        return sorted( list(set([str(maya.cmds.getAttr(attr)) for attr in ( maya.cmds.ls('*.nwgpt_id', recursive=True, objectsOnly=False) )] )))
-
+    # Customize library class
+    LIBRARY_CLASS = mayalibrary.MayaLibrary
 
     def setObjectName(self, name):
         """
