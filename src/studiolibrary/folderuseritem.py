@@ -10,6 +10,8 @@ from studioqt import QtWidgets
 
 class FolderUserItem(studiolibrary.LibraryItem):
 
+    EnabledOnlyInLibrary = False
+
     RegisterOrder = 90
     EnableNestedItems = True
 

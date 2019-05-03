@@ -33,7 +33,8 @@ def createMessageBox(
         headerIcon=None,
         headerColor=None,
         enableInputEdit=False,
-        enableDontShowCheckBox=False
+        enableDontShowCheckBox=False,
+        customInput=None
 ):
     """
     Open a question message box with the given options.
@@ -45,6 +46,7 @@ def createMessageBox(
     :type headerIcon: str
     :type headerColor: str
     :type enableDontShowCheckBox: bool
+    :type customInput: QWidget
 
     :rtype: MessageBox
     """
@@ -53,7 +55,8 @@ def createMessageBox(
         width=width,
         height=height,
         enableInputEdit=enableInputEdit,
-        enableDontShowCheckBox=enableDontShowCheckBox
+        enableDontShowCheckBox=enableDontShowCheckBox,
+        customInputWidget=customInput
     )
 
     mb.setText(text)
@@ -205,6 +208,54 @@ class MessageBox(QtWidgets.QDialog):
         return dialog.inputText(), clickedButton
 
     @staticmethod
+    def customInput(
+        parent,
+        title,
+        text,
+        customInput,
+        width=None,
+        height=None,
+        buttons=None,
+        headerIcon=None,
+        headerColor=None,
+    ):
+        """
+        Convenience dialog to get a single text value from the user.
+        
+        :type parent: QWidget
+        :type title: str
+        :type text: str
+        :type customInput: QWidget
+        :type height: int
+        :type buttons: list[QMessageBox.StandardButton]
+        :type headerIcon: str
+        :type headerColor: str
+        :rtype: QMessageBox.StandardButton
+        """
+        buttons = buttons or \
+                  QtWidgets.QDialogButtonBox.Ok | \
+                  QtWidgets.QDialogButtonBox.Cancel
+
+        dialog = createMessageBox(
+            parent,
+            title,
+            text,
+            width=width,
+            height=height,
+            buttons=buttons,
+            headerIcon=headerIcon,
+            headerColor=headerColor,
+            enableInputEdit=False,
+            customInput=customInput
+        )
+
+        dialog.exec_()
+
+        clickedButton = dialog.clickedStandardButton()
+
+        return clickedButton
+
+    @staticmethod
     def question(
         parent,
         title,
@@ -337,7 +388,8 @@ class MessageBox(QtWidgets.QDialog):
             width=None,
             height=None,
             enableInputEdit=False,
-            enableDontShowCheckBox=False
+            enableDontShowCheckBox=False,
+            customInputWidget=None
     ):
         super(MessageBox, self).__init__(parent)
         self.setObjectName("messageBox")
@@ -405,6 +457,13 @@ class MessageBox(QtWidgets.QDialog):
 
         bodyLayout.addWidget(self._message)
         bodyLayout.setContentsMargins(15, 15, 15, 15)
+
+        if customInputWidget:
+            self._customInputWidget = customInputWidget
+
+            bodyLayout.addStretch(1)
+            bodyLayout.addWidget(self._customInputWidget)
+            bodyLayout.addStretch(10)
 
         if enableInputEdit:
             self._inputEdit = QtWidgets.QLineEdit(self._body)
@@ -593,6 +652,14 @@ class MessageBox(QtWidgets.QDialog):
         :rtype: str 
         """
         return self._inputEdit.text()
+
+    def customInputWidget(self):
+        """Return the custom input widget if it exists
+        
+        Returns:
+            QtWdigets.QWidget -- the custom widget
+        """
+        return self._customInputWidget
 
     def setInputText(self, text):
         """

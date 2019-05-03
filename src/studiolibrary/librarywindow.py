@@ -1018,14 +1018,18 @@ class LibraryWindow(QtWidgets.QWidget):
             return cls.MenuOrder
 
         for cls in sorted(studiolibrary.registeredItems(), key=_key):
-            action = cls.createAction(menu, self)
 
-            if action:
-                icon = studioqt.Icon(action.icon())
-                icon.setColor(self.iconColor())
+            inlib = '.lib' in self.selectedFolderPath()
+            if cls.EnabledOnlyInLibrary == inlib:
 
-                action.setIcon(icon)
-                menu.addAction(action)
+                action = cls.createAction(menu, self)
+
+                if action:
+                    icon = studioqt.Icon(action.icon())
+                    icon.setColor(self.iconColor())
+
+                    action.setIcon(icon)
+                    menu.addAction(action)
 
         return menu
 

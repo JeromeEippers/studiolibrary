@@ -4,10 +4,36 @@ from functools import partial
 
 import studiolibrary
 import studiolibrary.widgets
-from studioqt import QtWidgets
+from studioqt import QtWidgets, QtCore
 
+
+class FolderLibraryCreateCustomWidget(QtWidgets.QWidget):
+
+    def __init__(self, libraries, parent=None):
+        super(FolderLibraryCreateCustomWidget, self).__init__(parent)
+        layout = QtWidgets.QHBoxLayout(self)
+
+        self._label = QtWidgets.QLabel(libraries[0], self)
+        layout.addWidget(self._label, 100)
+
+        self._menu = studiolibrary.widgets.LibrarySelectMenu(libraries, 'to create', self)
+        self._pushButton = QtWidgets.QPushButton("...", self)
+        self._pushButton.clicked.connect(self._onclicked)
+        layout.addWidget(self._pushButton,1)
+
+    def _onclicked(self):
+        point = self._pushButton.mapToGlobal(QtCore.QPoint(0, 0))
+        self._menu.show(point)
+        if self._menu.selected() != "":
+            self._label.setText(self._menu.selected())
+
+    def text(self):
+        return str(self._label.text())
+        
 
 class FolderLibraryItem(studiolibrary.LibraryItem):
+
+    EnabledOnlyInLibrary = False
 
     RegisterOrder = 95
     EnableNestedItems = True
@@ -72,30 +98,46 @@ class FolderLibraryItem(studiolibrary.LibraryItem):
             )
 
         else:
+            
+            loaded_rigs = libraryWindow.library().findRigsInScene()
 
-            name, button = studiolibrary.widgets.MessageBox.input(
-                libraryWindow,
-                "Create library",
-                "Create a new library with the name:",
-            )
+            if len(loaded_rigs) <= 0:
+                studiolibrary.widgets.MessageBox.warning(
+                    libraryWindow,
+                    "Missing rigs",
+                    "No entity found in the scene",
+                    buttons = QtWidgets.QDialogButtonBox.Ok
+                )
 
-            name = name.strip() + ".lib"
+            else :
 
-            if name and button == QtWidgets.QDialogButtonBox.Ok:
-                path = os.path.join(path, name)
+                custom = FolderLibraryCreateCustomWidget(loaded_rigs)
 
-                item = cls(path, libraryWindow=libraryWindow)
-                item.save(path)
+                button = studiolibrary.widgets.MessageBox.customInput(
+                    libraryWindow,
+                    "Create library",
+                    "Create a library for:",
+                    custom
+                )
 
-                if libraryWindow:
-                    libraryWindow.refresh()
-                    libraryWindow.selectFolderPath(path)
+                name = custom.text()
+
+                if name and button == QtWidgets.QDialogButtonBox.Ok:
+                    path = path.split('.user')[0] + '.user'
+                    for p in name.split('/'):
+                        path = os.path.join(path, p)
+                    path += '.lib'
+
+                    os.makedirs(path)
+
+                    if libraryWindow:
+                        libraryWindow.sync()
 
     def createItemData(self):
         """Overriding this method to force the item type to library"""
         itemData = super(FolderLibraryItem, self).createItemData()
         itemData['type'] = "Library"
-        itemData['lib_id'] = itemData['path'].split('.user')[-1].split('.lib')[0]
+        itemData['lib_id'] = itemData['path'].split('.user/')[-1].split('.lib')[0]
         return itemData
 
     def doubleClicked(self):

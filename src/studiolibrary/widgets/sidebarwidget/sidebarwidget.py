@@ -24,6 +24,7 @@ import studioqt
 from sidebarwidgetitem import SidebarWidgetItem
 from ..separatoraction import SeparatorAction
 from ..lineeditaction import LineEditAction
+from ..libraryselectmenu import LibrarySelectMenu
 
 
 
@@ -933,8 +934,28 @@ class SidebarWidget(QtWidgets.QTreeWidget):
         action.triggered.connect(callback)
         menu.addAction(action)
 
+        #find all the libraries
+        libItems = self.dataset().findItems([
+            {
+                'operator': 'or',
+                'filters': [('type', 'is', 'Library')]
+            }
+        ])
+        libPaths = list(set([item.itemData()['lib_id'] for item in libItems]))
+
+        def _libraryContextMenu(libPaths, lineEditAction, event):
+            menu = LibrarySelectMenu(libPaths, parent=lineEditAction.line())
+            menu.menu().setStyleSheet(
+                'background-color:black;'
+                )
+            point = lineEditAction.line().mapToGlobal(QtCore.QPoint(lineEditAction.line().width(), 0))
+            menu.show(point)
+            lineEditAction.line().setText(menu.selected(full=False))
+            lineEditAction.line().clearFocus()
+
         action = LineEditAction("Libraries Name", menu)
         action.line().setText(self._displayLibsDefined)
+        action.line().contextMenuEvent = partial(_libraryContextMenu, libPaths, action)
         action.valueChanged.connect(self.setLibaryFilterText)
         menu.addAction(action)
 
@@ -969,8 +990,28 @@ class SidebarWidget(QtWidgets.QTreeWidget):
         action.triggered.connect(callback)
         menu.addAction(action)
 
+        #find all users
+        userItems = self.dataset().findItems([
+            {
+                'operator': 'or',
+                'filters': [('type', 'is', 'User')]
+            }
+        ])
+        users = [item.name()[:-5] for item in userItems]
+
+        def _userContextMenu(users, lineEditAction, event):
+            menu = LibrarySelectMenu(users, parent=lineEditAction.line())
+            menu.menu().setStyleSheet(
+                'background-color:black;'
+                )
+            point = lineEditAction.line().mapToGlobal(QtCore.QPoint(lineEditAction.line().width(), 0))
+            menu.show(point)
+            lineEditAction.line().setText(menu.selected(full=False))
+            lineEditAction.line().clearFocus()
+
         action = LineEditAction("Users Name", menu)
         action.line().setText(self._displayUsersDefined)
+        action.line().contextMenuEvent = partial(_userContextMenu, users, action)
         action.valueChanged.connect(self.setUsersFilterText)
         menu.addAction(action)
         
