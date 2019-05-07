@@ -76,6 +76,16 @@ QPushButton#acceptButton:hover {
     background-color: rgb(ACCENT_COLOR_R, ACCENT_COLOR_G, ACCENT_COLOR_B, 250);
 }
 
+BaseSaveWidget QPushButton#rejectButton {
+	font: bold 12*DPIpx;
+	color: ACCENT_FOREGROUND_COLOR;
+    background-color: rgb(ACCENT_COLOR_R, ACCENT_COLOR_G, ACCENT_COLOR_B, 230);
+}
+
+BaseSaveWidget QPushButton#rejectButton:hover {
+    background-color: rgb(ACCENT_COLOR_R, ACCENT_COLOR_G, ACCENT_COLOR_B, 250);
+}
+
 /*
  --------------------------------------------------------------------------
  Slider
@@ -907,6 +917,7 @@ BaseLoadWidget #thumbnailButton,
 BaseSaveWidget QLineEdit,
 BaseSaveWidget QTextEdit,
 BaseSaveWidget QComboBox,
+BaseSaveWidget #rejectButton,
 BaseSaveWidget #thumbnailButton {
     border-radius: 2px;
 }

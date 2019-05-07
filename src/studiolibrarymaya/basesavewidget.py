@@ -69,6 +69,7 @@ class BaseSaveWidget(QtWidgets.QWidget):
         self.ui.thumbnailButton.clicked.connect(self.thumbnailCapture)
         self.ui.browseFolderButton.clicked.connect(self.browseFolder)
         self.ui.selectionSetButton.clicked.connect(self.showSelectionSetsMenu)
+        self.ui.rejectButton.clicked.connect(self.close)
 
         try:
             self.selectionChanged()
