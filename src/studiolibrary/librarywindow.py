@@ -85,8 +85,10 @@ class LibraryWindow(QtWidgets.QWidget):
     }
 
     TRASH_ENABLED = True
+    PROGRESS_BAR_VISIBLE = False
     SETTINGS_DIALOG_ENABLED = False  # Still in development
     RECURSIVE_SEARCH_ENABLED = False
+
 
     # Still in development
     DPI_ENABLED = False
@@ -226,8 +228,9 @@ class LibraryWindow(QtWidgets.QWidget):
         self._previewWidget = None
         self._currentItem = None
         self._library = None
+        self._lightbox = None
         self._refreshEnabled = False
-
+        self._progressBar = None
         self._superusers = None
         self._lockRegExp = None
         self._unlockRegExp = None
@@ -677,15 +680,43 @@ class LibraryWindow(QtWidgets.QWidget):
         
         :rtype: None 
         """
-        elapsedTime = time.time()
-        self.library().sync()
-        self.showToastMessage("Synced")
-        elapsedTime = time.time() - elapsedTime
+        progressBar = self.statusWidget().progressBar()
 
-        msg = "Synced items in {0:.3f} seconds."
-        msg = msg.format(elapsedTime)
+        @studioqt.showWaitCursor
+        def _sync():
+            elapsedTime = time.time()
+            self.library().sync(percentCallback=self.setProgressBarValue)
 
-        self.statusWidget().showInfoMessage(msg)
+            elapsedTime = time.time() - elapsedTime
+
+            msg = "Synced items in {0:.3f} seconds."
+            msg = msg.format(elapsedTime)
+
+            self.statusWidget().showInfoMessage(msg)
+            self.setProgressBarValue("Done")
+
+            studioqt.fadeOut(progressBar, duration=500, onFinished=progressBar.close)
+
+        self.setProgressBarValue("Syncing")
+        studioqt.fadeIn(progressBar, duration=1, onFinished=_sync)
+
+        if self.PROGRESS_BAR_VISIBLE:
+            progressBar.show()
+
+    def setProgressBarValue(self, label, value=-1):
+        """Set the progress bar label and value"""
+
+        progressBar = self.statusWidget().progressBar()
+
+        if value == -1:
+            self.statusWidget().progressBar().reset()
+            progressBar.setValue(100)
+            progressBar.setText(label)
+        else:
+            percent = value * 100.0
+            text = "{0} {1:.0f}%".format(label, percent)
+            progressBar.setValue(percent)
+            progressBar.setText(text)
 
     def refresh(self):
         """
@@ -1039,19 +1070,19 @@ class LibraryWindow(QtWidgets.QWidget):
 
         :type kwargs: dict
         """
-        state = []
+        fields = []
 
         color = kwargs.get("accentColor")
-        if self.theme().accentColor().toString() != color:
+        if color and self.theme().accentColor().toString() != color:
             self.theme().setAccentColor(color)
 
         color = kwargs.get("backgroundColor")
-        if self.theme().backgroundColor().toString() != color:
+        if color and self.theme().backgroundColor().toString() != color:
             self.theme().setBackgroundColor(color)
 
-        path = kwargs.get("path")
+        path = kwargs.get("path", "")
         if not os.path.exists(path):
-            state.append(
+            fields.append(
                 {
                     "name": "path",
                     "value": path,
@@ -1059,7 +1090,17 @@ class LibraryWindow(QtWidgets.QWidget):
                 }
             )
 
-        return state
+        return fields
+
+    def settingsAccepted(self, **kwargs):
+        """
+        Called when the user has accepted the changes in the settings dialog.
+
+        :type kwargs: dict
+        """
+        path = kwargs.get("path")
+        if path and path != self.path():
+            self.setPath(path)
 
     def showSettingDialog(self):
         """Show the settings dialog."""
@@ -1072,7 +1113,7 @@ class LibraryWindow(QtWidgets.QWidget):
             "layout": "vertical",
             "schema": [
                 {"name": "name", "type": "string", "default": self.name()},
-                {"name": "path", "type": "string", "value": self.path()},
+                {"name": "path", "type": "path", "value": self.path()},
                 {
                     "name": "accentColor",
                     "type": "color",
@@ -1103,6 +1144,7 @@ class LibraryWindow(QtWidgets.QWidget):
                 },
             ],
             "validator": self.settingsValidator,
+            "accepted": self.settingsAccepted,
         }
 
         widget = studiolibrary.widgets.FormDialog(form=form)
@@ -1113,9 +1155,9 @@ class LibraryWindow(QtWidgets.QWidget):
         widget.setMaximumHeight(400)
         widget.acceptButton().setText("Save")
 
-        lightbox = studiolibrary.widgets.Lightbox(self)
-        lightbox.setWidget(widget)
-        lightbox.show()
+        self._lightbox = studiolibrary.widgets.Lightbox(self)
+        self._lightbox.setWidget(widget)
+        self._lightbox.show()
 
     def createSettingsMenu(self):
         """
@@ -1633,6 +1675,7 @@ class LibraryWindow(QtWidgets.QWidget):
         self._currentItem = item
 
         if item:
+            self.closePreviewWidget()
             try:
                 item.showPreviewWidget(self)
             except Exception as error:
@@ -1674,9 +1717,6 @@ class LibraryWindow(QtWidgets.QWidget):
 
         :rtype: None
         """
-        if self._previewWidget:
-            self._previewWidget.close()
-
         layout = self._previewFrame.layout()
 
         while layout.count():

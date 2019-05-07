@@ -54,9 +54,11 @@ class FieldWidget(QtWidgets.QFrame):
         super(FieldWidget, self).__init__(parent)
 
         self._data = data or {}
+        self._error = False
         self._widget = None
         self._default = None
         self._required = None
+        self._errorLabel = None
         self._menuButton = None
         self._actionResult = None
 
@@ -72,7 +74,6 @@ class FieldWidget(QtWidgets.QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        # self.setLayout(layout)
         self.setContentsMargins(0, 0, 0, 0)
 
         self._label = QtWidgets.QLabel(self)
@@ -142,8 +143,7 @@ class FieldWidget(QtWidgets.QFrame):
         
         :type data: dict
         """
-        self._data.update(data)
-        state = self._data
+        state = data
 
         self.blockSignals(True)
 
@@ -157,7 +157,7 @@ class FieldWidget(QtWidgets.QFrame):
         # Must set the default before value
         if default is not None:
             self.setDefault(default)
-        else:
+        elif value is not None:
             self.setDefault(value)
 
         if value is not None and value != self.value():
@@ -169,6 +169,7 @@ class FieldWidget(QtWidgets.QFrame):
         enabled = state.get('enabled')
         if enabled is not None:
             self.setEnabled(enabled)
+            self._label.setEnabled(enabled)
 
         hidden = state.get('hidden')
         if hidden is not None:
@@ -178,22 +179,24 @@ class FieldWidget(QtWidgets.QFrame):
         if required is not None:
             self.setRequired(required)
 
-        error = state.get('error', '')
-        self.setError(error)
+        error = state.get('error')
+        if error is not None:
+            self.setError(error)
 
-        toolTip = state.get('toolTip', '')
-        self.setToolTip(toolTip)
-        self.setStatusTip(toolTip)
+        toolTip = state.get('toolTip')
+        if toolTip is not None:
+            self.setToolTip(toolTip)
+            self.setStatusTip(toolTip)
 
         style = state.get("style")
-        if style:
+        if style is not None:
             self.setStyleSheet(style)
 
         title = self.title() or ""
         self.setText(title)
 
-        label = state.get('label', {})
-        if label:
+        label = state.get('label')
+        if label is not None:
 
             text = label.get("name")
             if text is not None:
@@ -203,9 +206,22 @@ class FieldWidget(QtWidgets.QFrame):
             if visible is not None:
                 self.label().setVisible(visible)
 
-        text = state.get("menu", {}).get("name")
-        if text is not None:
-            self.setMenuText(text)
+        # Menu Items
+        actions = state.get('actions')
+        if actions is not None:
+            self._menuButton.setVisible(True)
+
+        # Menu Button
+        menu = state.get('menu')
+        if menu is not None:
+            text = menu.get("name")
+            if text is not None:
+                self._menuButton.setText(text)
+
+            visible = menu.get("visible", True)
+            self._menuButton.setVisible(visible)
+
+        self._data.update(data)
 
         self.refresh()
 
@@ -217,17 +233,20 @@ class FieldWidget(QtWidgets.QFrame):
         
         :type message: str
         """
-        error = True if message else False
+        self._error = True if message else False
 
         self._data["error"] = message
 
-        if error:
+        if self._error:
+            self._errorLabel.setText(message)
+            self._errorLabel.setHidden(False)
             self.setToolTip(message)
         else:
-            self.setToolTip(self.data().get('annotation'))
+            self._errorLabel.setText("")
+            self._errorLabel.setHidden(True)
+            self.setToolTip(self.data().get('toolTip'))
 
-        self.setProperty('error', error)
-        self.setStyleSheet(self.styleSheet())
+        self.refresh()
 
     def setText(self, text):
         """
@@ -324,6 +343,10 @@ class FieldWidget(QtWidgets.QFrame):
         
         :type widget: QtWidgets.QWidget
         """
+        widgetLayout = QtWidgets.QHBoxLayout()
+        widgetLayout.setContentsMargins(0, 0, 0, 0)
+        widgetLayout.setSpacing(0)
+
         self._widget = widget
         self._widget.setParent(self)
         self._widget.setObjectName('widget')
@@ -332,30 +355,40 @@ class FieldWidget(QtWidgets.QFrame):
             QtWidgets.QSizePolicy.Preferred,
         )
 
-        self._layout2.addWidget(self._widget)
+        self._menuButton = QtWidgets.QPushButton("...")
+        self._menuButton.setHidden(True)
+        self._menuButton.setObjectName("menuButton")
+        self._menuButton.clicked.connect(self._menuCallback)
+        self._menuButton.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred,
+            QtWidgets.QSizePolicy.Expanding,
+        )
 
-        self.createMenuButton()
+        widgetLayout.addWidget(self._widget)
+        widgetLayout.addWidget(self._menuButton)
 
-    def setMenuText(self, text):
-        self._menuButton.setText(text)
+        layout = QtWidgets.QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
 
-    def createMenuButton(self):
-        """Create the menu button to show the actions."""
-        menu = self.data().get("menu", {})
-        actions = self.data().get("actions", {})
+        self._errorLabel = QtWidgets.QLabel(self)
+        self._errorLabel.setHidden(True)
+        self._errorLabel.setObjectName("errorLabel")
+        self._errorLabel.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding,
+            QtWidgets.QSizePolicy.Preferred,
+        )
 
-        if menu or actions:
+        layout.addLayout(widgetLayout)
+        layout.addWidget(self._errorLabel)
 
-            name = menu.get("name", "...")
-            callback = menu.get("callback", self.showMenu)
+        self._layout2.addLayout(layout)
 
-            self._menuButton = QtWidgets.QPushButton(name)
-            self._menuButton.setObjectName("menuButton")
-            self._menuButton.clicked.connect(callback)
+    def _menuCallback(self):
+        callback = self.data().get("menu", {}).get("callback", self.showMenu)
+        callback()
 
-            self._layout2.addWidget(self._menuButton)
-
-    def actionCallback(self, callback):
+    def _actionCallback(self, callback):
         """
         Wrap schema callback to get the return value.
         
@@ -373,7 +406,7 @@ class FieldWidget(QtWidgets.QFrame):
             name = action.get("name", "No name found")
             callback = action.get("callback")
 
-            func = functools.partial(self.actionCallback, callback)
+            func = functools.partial(self._actionCallback, callback)
 
             action = menu.addAction(name)
             action.triggered.connect(func)
@@ -404,6 +437,7 @@ class FieldWidget(QtWidgets.QFrame):
 
         self.setProperty("layout", direction)
         self.setProperty('default', self.isDefault())
+        self.setProperty('error', self._error)
 
         self.setStyleSheet(self.styleSheet())
 
@@ -438,6 +472,7 @@ class LabelFieldWidget(FieldWidget):
         super(LabelFieldWidget, self).__init__(*args, **kwargs)
 
         widget = Label(self)
+        widget.setAlignment(QtCore.Qt.AlignVCenter)
         widget.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         self.setWidget(widget)
 
@@ -484,6 +519,35 @@ class StringFieldWidget(FieldWidget):
         """
         self.widget().setText(value)
         super(StringFieldWidget, self).setValue(value)
+
+
+class PathFieldWidget(StringFieldWidget):
+    def __init__(self, *args, **kwargs):
+        super(PathFieldWidget, self).__init__(*args, **kwargs)
+
+    def setData(self, data):
+        """
+        Overriding this method to add a browse to folder button.
+
+        :type data: dict
+        """
+        if "menu" not in data:
+            data["menu"] = {
+                "callback": self.browse
+            }
+
+        super(PathFieldWidget, self).setData(data)
+
+    def browse(self):
+        """Open the file dialog."""
+        path = self.value()
+        path = QtWidgets.QFileDialog.getExistingDirectory(
+            None,
+            "Browse Folder",
+            path
+        )
+        if path:
+            self.setValue(path)
 
 
 class TextFieldWidget(FieldWidget):

@@ -250,7 +250,7 @@ class BaseItem(studiolibrary.LibraryItem):
 
         return options
 
-    def optionsChanged(self, **options):
+    def saveOptions(self, **options):
         """
         Triggered when the user changes the options.
 
