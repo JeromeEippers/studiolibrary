@@ -39,11 +39,6 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-class NamespaceOption:
-    FromFile = "file"
-    FromCustom = "custom"
-    FromSelection = "selection"
-
 
 class BaseItemSignals(QtCore.QObject):
     """"""
@@ -107,7 +102,6 @@ class BaseItem(studiolibrary.LibraryItem):
         self._currentSaveSchema = []
 
         self._namespaces = []
-        self._namespaceOption = NamespaceOption.FromSelection
 
         self._transferClass = None
         self._transferObject = None
@@ -434,7 +428,7 @@ class BaseItem(studiolibrary.LibraryItem):
         namespaces = namespaces or self.namespaces()
         kwargs = kwargs or mutils.selectionModifiers()
 
-        msg = "Select content: Item.selectContent(namespacea={0}, kwargs={1})"
+        msg = "Select content: Item.selectContent(namespaces={0}, kwargs={1})"
         msg = msg.format(namespaces, kwargs)
         logger.debug(msg)
 
@@ -498,71 +492,11 @@ class BaseItem(studiolibrary.LibraryItem):
         :rtype: list[str]
         """
         namespaces = []
-        namespaceOption = self.namespaceOption()
-
-        # # When creating a new item we can only get the namespaces from
-        # # selection because the file (transferObject) doesn't exist yet.
-        if not self.exists():
-            namespaces = self.namespacesFromSelection()
-
-        # If the file (transferObject) exists then we can use the namespace
-        # option to determined which namespaces to return.
-        if namespaceOption == NamespaceOption.FromFile:
-            namespaces = self.namespacesFromFile()
-
-        elif namespaceOption == NamespaceOption.FromCustom:
-            namespaces = self.namespacesFromCustom()
-
-        elif namespaceOption == NamespaceOption.FromSelection:
-            namespaces = self.namespacesFromSelection()
+        if self.library() and self.library().activeCharacterNamespace():
+            namespaces = [self.library().activeCharacterNamespace()]
 
         return namespaces
 
-    def setNamespaceOption(self, namespaceOption):
-        """
-        Set the namespace option for this item.
-
-        :type namespaceOption: NamespaceOption
-        :rtype: None
-        """
-        self.settings()["namespaceOption"] = namespaceOption
-
-    def namespaceOption(self):
-        """
-        Return the namespace option for this item.
-
-        :rtype: NamespaceOption
-        """
-        namespaceOption = self.settings().get(
-            "namespaceOption",
-            NamespaceOption.FromSelection
-        )
-        return namespaceOption
-
-    def namespacesFromCustom(self):
-        """
-        Return the namespace the user has set.
-
-        :rtype: list[str]
-        """
-        return self.settings().get("namespaces", [])
-
-    def setCustomNamespaces(self, namespaces):
-        """
-        Set the users custom namespace.
-
-        :type namespaces: list[str]
-        :rtype: None
-        """
-        self.settings()["namespaces"] = namespaces
-
-    def namespacesFromFile(self):
-        """
-        Return the namespaces from the transfer data.
-
-        :rtype: list[str]
-        """
-        return self.transferObject().namespaces()
 
     @staticmethod
     def namespacesFromSelection():

@@ -36,11 +36,6 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 
-class NamespaceOption:
-    FromFile = "file"
-    FromCustom = "custom"
-    FromSelection = "selection"
-
 
 class BaseLoadWidget(QtWidgets.QWidget):
     """Base widget for creating and previewing transfer items."""
@@ -68,7 +63,6 @@ class BaseLoadWidget(QtWidgets.QWidget):
         try:
             self.selectionChanged()
             self.setScriptJobEnabled(True)
-            self.updateNamespaceEdit()
         except NameError as error:
             logger.exception(error)
 
@@ -81,23 +75,13 @@ class BaseLoadWidget(QtWidgets.QWidget):
         self.ui.acceptButton.clicked.connect(self.accept)
         self.ui.selectionSetButton.clicked.connect(self.showSelectionSetsMenu)
 
-        self.ui.useFileNamespace.clicked.connect(self._namespaceOptionClicked)
-        self.ui.useCustomNamespace.clicked.connect(self._useCustomNamespaceClicked)
-        self.ui.useSelectionNamespace.clicked.connect(self._namespaceOptionClicked)
-
-        self.ui.namespaceComboBox.activated[str].connect(self._namespaceEditChanged)
-        self.ui.namespaceComboBox.editTextChanged[str].connect(self._namespaceEditChanged)
-        self.ui.namespaceComboBox.currentIndexChanged[str].connect(self._namespaceEditChanged)
-
         self.ui.iconToggleBoxButton.clicked.connect(self.saveSettings)
         self.ui.infoToggleBoxButton.clicked.connect(self.saveSettings)
         self.ui.optionsToggleBoxButton.clicked.connect(self.saveSettings)
-        self.ui.namespaceToggleBoxButton.clicked.connect(self.saveSettings)
 
         self.ui.iconToggleBoxButton.toggled[bool].connect(self.ui.iconToggleBoxFrame.setVisible)
         self.ui.infoToggleBoxButton.toggled[bool].connect(self.ui.infoToggleBoxFrame.setVisible)
         self.ui.optionsToggleBoxButton.toggled[bool].connect(self.ui.optionsToggleBoxFrame.setVisible)
-        self.ui.namespaceToggleBoxButton.toggled[bool].connect(self.ui.namespaceToggleBoxFrame.setVisible)
 
     def createSequenceWidget(self):
         """
@@ -305,78 +289,6 @@ class BaseLoadWidget(QtWidgets.QWidget):
         """
         return self.item().objectCount()
 
-    def _namespaceEditChanged(self, text):
-        """
-        Triggered when the combox box has changed value.
-
-        :type text: str
-        :rtype: None
-        """
-        self.ui.useCustomNamespace.setChecked(True)
-        self.ui.namespaceComboBox.setEditText(text)
-        self.saveSettings()
-
-    def _namespaceOptionClicked(self):
-        self.updateNamespaceEdit()
-        self.saveSettings()
-
-    def _useCustomNamespaceClicked(self):
-        """
-        Triggered when the custom namespace radio button is clicked.
-
-        :rtype: None
-        """
-        self.ui.namespaceComboBox.setFocus()
-        self.updateNamespaceEdit()
-        self.saveSettings()
-
-    def namespaces(self):
-        """
-        Return the namespace names from the namespace edit widget.
-
-        :rtype: list[str]
-        """
-        namespaces = str(self.ui.namespaceComboBox.currentText())
-        namespaces = studiolibrary.stringToList(namespaces)
-        return namespaces
-
-    def setNamespaces(self, namespaces):
-        """
-        Set the namespace names for the namespace edit.
-
-        :type namespaces: list
-        :rtype: None
-        """
-        namespaces = studiolibrary.listToString(namespaces)
-        self.ui.namespaceComboBox.setEditText(namespaces)
-
-    def namespaceOption(self):
-        """
-        Get the current namespace option.
-
-        :rtype: NamespaceOption
-        """
-        if self.ui.useFileNamespace.isChecked():
-            namespaceOption = NamespaceOption.FromFile
-        elif self.ui.useCustomNamespace.isChecked():
-            namespaceOption = NamespaceOption.FromCustom
-        else:
-            namespaceOption = NamespaceOption.FromSelection
-
-        return namespaceOption
-
-    def setNamespaceOption(self, namespaceOption):
-        """
-        Set the current namespace option.
-
-        :type namespaceOption: NamespaceOption
-        """
-        if namespaceOption == NamespaceOption.FromFile:
-            self.ui.useFileNamespace.setChecked(True)
-        elif namespaceOption == NamespaceOption.FromCustom:
-            self.ui.useCustomNamespace.setChecked(True)
-        else:
-            self.ui.useSelectionNamespace.setChecked(True)
 
     def setSettings(self, settings):
         """
@@ -384,11 +296,6 @@ class BaseLoadWidget(QtWidgets.QWidget):
 
         :type settings: dict
         """
-        namespaces = settings.get("namespaces", [])
-        self.setNamespaces(namespaces)
-
-        namespaceOption = settings.get("namespaceOption", NamespaceOption.FromFile)
-        self.setNamespaceOption(namespaceOption)
 
         toggleBoxChecked = settings.get("iconToggleBoxChecked", True)
         self.ui.iconToggleBoxFrame.setVisible(toggleBoxChecked)
@@ -402,9 +309,6 @@ class BaseLoadWidget(QtWidgets.QWidget):
         self.ui.optionsToggleBoxFrame.setVisible(toggleBoxChecked)
         self.ui.optionsToggleBoxButton.setChecked(toggleBoxChecked)
 
-        toggleBoxChecked = settings.get("namespaceToggleBoxChecked", True)
-        self.ui.namespaceToggleBoxFrame.setVisible(toggleBoxChecked)
-        self.ui.namespaceToggleBoxButton.setChecked(toggleBoxChecked)
 
     def settings(self):
         """
@@ -413,15 +317,9 @@ class BaseLoadWidget(QtWidgets.QWidget):
         :rtype: dict
         """
         settings = {}
-
-        settings["namespaces"] = self.namespaces()
-        settings["namespaceOption"] = self.namespaceOption()
-
         settings["iconToggleBoxChecked"] = self.ui.iconToggleBoxButton.isChecked()
         settings["infoToggleBoxChecked"] = self.ui.infoToggleBoxButton.isChecked()
         settings["optionsToggleBoxChecked"] = self.ui.optionsToggleBoxButton.isChecked()
-        settings["namespaceToggleBoxChecked"] = self.ui.namespaceToggleBoxButton.isChecked()
-
         return settings
 
     def loadSettings(self):
@@ -448,55 +346,7 @@ class BaseLoadWidget(QtWidgets.QWidget):
 
         :rtype: None
         """
-        self.updateNamespaceEdit()
-
-    def updateNamespaceFromScene(self):
-        """
-        Update the namespaces in the combobox with the ones in the scene.
-
-        :rtype: None
-        """
-        namespaces = mutils.namespace.getAll()
-
-        text = self.ui.namespaceComboBox.currentText()
-
-        if namespaces:
-            self.ui.namespaceComboBox.setToolTip("")
-        else:
-            toolTip = "No namespaces found in scene."
-            self.ui.namespaceComboBox.setToolTip(toolTip)
-
-        self.ui.namespaceComboBox.clear()
-        self.ui.namespaceComboBox.addItems(namespaces)
-        self.ui.namespaceComboBox.setEditText(text)
-
-    def updateNamespaceEdit(self):
-        """
-        Update the namespace edit.
-
-        :rtype: None
-        """
-        logger.debug('Updating namespace edit')
-
-        self.ui.namespaceComboBox.blockSignals(True)
-
-        self.updateNamespaceFromScene()
-
-        namespaces = []
-
-        if self.ui.useSelectionNamespace.isChecked():
-            namespaces = mutils.namespace.getFromSelection()
-        elif self.ui.useFileNamespace.isChecked():
-            namespaces = self.item().transferObject().namespaces()
-
-        if not self.ui.useCustomNamespace.isChecked():
-            self.setNamespaces(namespaces)
-
-            # Removes focus from the combobox
-            self.ui.namespaceComboBox.setEnabled(False)
-            self.ui.namespaceComboBox.setEnabled(True)
-
-        self.ui.namespaceComboBox.blockSignals(False)
+        pass
 
     def accept(self):
         """
