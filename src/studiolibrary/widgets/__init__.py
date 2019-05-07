@@ -34,3 +34,4 @@ from .sequencewidget import ImageSequenceWidget
 from .formwidget import FormWidget, FormDialog
 from .lineeditaction import LineEditAction
 from .libraryselectmenu import LibrarySelectMenu
+from .controlwidget import ControlWidget

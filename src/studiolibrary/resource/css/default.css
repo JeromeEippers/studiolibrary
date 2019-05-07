@@ -459,6 +459,29 @@ SearchWidget QPushButton, SearchWidget QPushButton:hover {
 
 /*
  --------------------------------------------------------------------------
+ ControlWidget
+ --------------------------------------------------------------------------
+*/
+
+ControlWidget, ControlWidget QComboBox {
+	font: 22*DPIpx;
+	height: 35px;
+	padding: 0 2px;
+	color: ACCENT_FOREGROUND_COLOR;
+	background-color: ACCENT_COLOR;
+	selection-background-color: rgb(ACCENT_FOREGROUND_COLOR_R, ACCENT_FOREGROUND_COLOR_G, ACCENT_FOREGROUND_COLOR_B, 210);
+	selection-color: ACCENT_COLOR;
+}
+
+ControlWidget QPushButton, ControlWidget QPushButton:hover {
+	border: 0px;
+	padding: 0 2px;
+	color: ACCENT_FOREGROUND_COLOR;
+	background-color: rgb(255, 255, 255, 0);
+}
+
+/*
+ --------------------------------------------------------------------------
  QSplitter
  --------------------------------------------------------------------------
 */

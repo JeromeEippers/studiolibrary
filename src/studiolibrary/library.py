@@ -61,6 +61,7 @@ class Library(QtCore.QObject):
     searchStarted = QtCore.Signal()
     searchFinished = QtCore.Signal()
     searchTimeFinished = QtCore.Signal()
+    activeCharacterChanged = QtCore.Signal()
 
     def __init__(self, path=None, libraryWindow=None, *args):
         QtCore.QObject.__init__(self, *args)
@@ -82,6 +83,7 @@ class Library(QtCore.QObject):
 
         self._zefir_user = zefir_currentuser()
         self._zefir_all_users = zefir_allusers()
+        self._activeCharacter = ""
 
         self.setPath(path)
         self.setDirty(True)
@@ -105,6 +107,59 @@ class Library(QtCore.QObject):
             list string -- the list of rigs
         """
         return []
+
+    def findRigsNamespacesInScene(self):
+        """return the list of namespace in the scene who have a rig
+        
+        Returns:
+            list string -- the list of namespaces
+        """
+        return []
+
+    def findRigInSceneFromNamespace(self, namespace):
+        """Find the rig from a namespace
+        
+        Arguments:
+            namespace {string} -- the namespace
+        
+        Returns:
+            string -- the rig id
+        """
+        return ""
+
+
+    def setActiveCharacter(self, namespace):
+        """change the active character of the library
+        
+        Arguments:
+            namespace {string} -- the namespace of the character (or "")
+        """
+        self._activeCharacter = namespace
+        self.activeCharacterChanged.emit()
+
+
+    def activeCharacterNamespace(self):
+        """get the active character namespace
+        
+        Returns:
+            string -- the namespace of the character
+        """
+        return self._activeCharacter
+
+
+    def activeCharacterRig(self):
+        """get the active character rig
+        
+        Returns:
+            string -- the geppetto id of the actice character
+        """
+        print "ACTIVECHARACTER"
+        if self._activeCharacter:
+            print "ACTIVECHARACTER", self._activeCharacter
+            print "ACTIVECHARACTER", self._activeCharacter, self.findRigInSceneFromNamespace(self._activeCharacter)
+            return self.findRigInSceneFromNamespace(self._activeCharacter)
+        return ""
+
 
     def sortBy(self):
         """

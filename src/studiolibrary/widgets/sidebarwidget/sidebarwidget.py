@@ -259,9 +259,14 @@ class SidebarWidget(QtWidgets.QTreeWidget):
         self._dataset = dataset
         self._options['rootText'] = dataset.projectName()
         self._dataset.dataChanged.connect(self._dataChanged)
-        self.setUserFilter(self._displayUsers, False)
-        self.setLibraryFilter(self._displayLibs, False)
+        self.updateFilters(False)
         self._dataChanged()
+
+
+    def updateFilters(self, forceSearch=True):
+        self.setUserFilter(self._displayUsers, False)
+        self.setLibraryFilter(self._displayLibs, forceSearch)
+
 
     def dataset(self):
         """
@@ -817,11 +822,19 @@ class SidebarWidget(QtWidgets.QTreeWidget):
         self._displayLibsQuery = {} 
 
         if self._displayLibs == SideBarDisplayLibs.FROM_SCENE:
-            self._displayLibsQuery = {   
-                    'if': ('path', 'contains','.lib'),
-                    'operator': 'or',
-                    'filters': [('path', 'contains', name.split('/')[-1]+'.lib') for name in self.dataset().findRigsInScene()]
-                } 
+            selectedRig = self.dataset().activeCharacterRig()
+            if selectedRig:
+                self._displayLibsQuery = {   
+                        'if': ('path', 'contains','.lib'),
+                        'operator': 'or',
+                        'filters': [('path', 'contains', selectedRig.split('/')[-1]+'.lib')]
+                    } 
+            else:
+                self._displayLibsQuery = {   
+                        'operator': 'or',
+                        'filters': [('path', 'not_contains', '.lib')]
+                    } 
+
 
         elif self._displayLibs == SideBarDisplayLibs.USER_DEFINED:
             if self._displayLibsDefined and self._displayLibsDefined.isspace() == False:

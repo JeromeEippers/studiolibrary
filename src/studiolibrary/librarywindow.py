@@ -121,6 +121,7 @@ class LibraryWindow(QtWidgets.QWidget):
     STATUS_WIDGET_CLASS = studiolibrary.widgets.StatusWidget
     MENUBAR_WIDGET_CLASS = studiolibrary.widgets.MenuBarWidget
     SIDEBAR_WIDGET_CLASS = studiolibrary.widgets.SidebarWidget
+    CONTROL_WIDGET_CLASS = studiolibrary.widgets.ControlWidget
 
     # Customize library classe
     LIBRARY_CLASS = studiolibrary.Library
@@ -270,6 +271,7 @@ class LibraryWindow(QtWidgets.QWidget):
         self._statusWidget = self.STATUS_WIDGET_CLASS(self)
         self._menuBarWidget = self.MENUBAR_WIDGET_CLASS(self)
         self._sidebarWidget = self.SIDEBAR_WIDGET_CLASS(self)
+        self._controlWidget = self.CONTROL_WIDGET_CLASS(self)
 
         self._sortByMenu.setDataset(library)
         self._groupByMenu.setDataset(library)
@@ -277,6 +279,7 @@ class LibraryWindow(QtWidgets.QWidget):
         self._itemsWidget.setDataset(library)
         self._searchWidget.setDataset(library)
         self._sidebarWidget.setDataset(library)
+        self._controlWidget.setDataset(library)
 
         self.setLibrary(library)
 
@@ -295,6 +298,7 @@ class LibraryWindow(QtWidgets.QWidget):
         tip = "Add a new item to the selected folder"
         self.addMenuBarAction(name, icon, tip, callback=self.showNewMenu)
 
+        self._menuBarWidget.addWidget(self._controlWidget)
         self._menuBarWidget.addWidget(self._searchWidget)
 
         name = "Folders"
@@ -408,6 +412,8 @@ class LibraryWindow(QtWidgets.QWidget):
         sidebarWidget.customContextMenuRequested.connect(self.showFolderMenu)
 
         self.folderSelectionChanged.connect(self.updateLock)
+
+        library.activeCharacterChanged.connect(sidebarWidget.updateFilters)
 
         self.updateViewButton()
         self.updateFiltersButton()
