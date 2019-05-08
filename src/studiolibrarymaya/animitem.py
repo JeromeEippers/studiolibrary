@@ -45,6 +45,7 @@ class AnimItem(baseitem.BaseItem):
     MenuName = "Animation"
     MenuIconPath = iconPath
     TypeIconPath = iconPath
+    
 
     def __init__(self, *args, **kwargs):
         """

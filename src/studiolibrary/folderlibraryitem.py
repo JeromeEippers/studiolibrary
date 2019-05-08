@@ -173,4 +173,10 @@ class FolderLibraryItem(studiolibrary.LibraryItem):
         self.libraryWindow().setFolderFilterLibraryText(" ".join([item.name()[:-4] for item in items]))
 
 
+    def isDeleteEnabled(self):
+        """Check if we can delete this element
+        """
+        return True
+
+
 studiolibrary.registerItem(FolderLibraryItem)

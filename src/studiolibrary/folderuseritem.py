@@ -129,6 +129,9 @@ class FolderUserItem(studiolibrary.LibraryItem):
         self.libraryWindow().setFolderFilterUserText(" ".join([item.name()[:-5] for item in items]))
     
 
-
+    def isDeleteEnabled(self):
+        """Check if we can delete this element
+        """
+        return False
 
 studiolibrary.registerItem(FolderUserItem)

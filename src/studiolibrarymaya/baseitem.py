@@ -46,6 +46,7 @@ class BaseItemSignals(QtCore.QObject):
 
 
 class BaseItem(studiolibrary.LibraryItem):
+
     _baseItemSignals = BaseItemSignals()
 
     loadValueChanged = _baseItemSignals.loadValueChanged
@@ -568,3 +569,9 @@ class BaseItem(studiolibrary.LibraryItem):
         self.transferObject().load(objects=objects, namespaces=namespaces, **kwargs)
 
         logger.debug(u'Loading: {0}'.format(self.transferPath()))
+
+
+    def isDeleteEnabled(self):
+        """Check if we can delete this element
+        """
+        return True

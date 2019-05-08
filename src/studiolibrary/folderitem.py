@@ -123,5 +123,10 @@ class FolderItem(studiolibrary.LibraryItem):
         """Adding this method to avoid NotImpementedError."""
         pass
 
+    def isDeleteEnabled(self):
+        """Check if we can delete this element
+        """
+        return True
+
 
 studiolibrary.registerItem(FolderItem)

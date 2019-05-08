@@ -84,7 +84,7 @@ class LibraryWindow(QtWidgets.QWidget):
         }
     }
 
-    TRASH_ENABLED = True
+    TRASH_ENABLED = False
     PROGRESS_BAR_VISIBLE = False
     SETTINGS_DIALOG_ENABLED = False  # Still in development
     RECURSIVE_SEARCH_ENABLED = False

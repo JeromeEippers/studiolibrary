@@ -55,8 +55,6 @@ class LibraryItemSignals(QtCore.QObject):
 class LibraryItem(studiolibrary.widgets.Item):
 
     EnabledOnlyInLibrary = True
-
-    EnableDelete = False
     EnableNestedItems = False
 
     Extension = ""
@@ -302,6 +300,11 @@ class LibraryItem(studiolibrary.widgets.Item):
 
         return widget
 
+    def isDeleteEnabled(self):
+        """Check if we can delete this element
+        """
+        return False
+
     def contextEditMenu(self, menu, items=None):
         """
         Called when the user would like to edit the item from the menu.
@@ -312,12 +315,7 @@ class LibraryItem(studiolibrary.widgets.Item):
         :type items: list[LibraryItem]
         :rtype: None
         """
-        if self.EnableDelete:
-            action = QtWidgets.QAction("Delete", menu)
-            action.triggered.connect(self.showDeleteDialog)
-            menu.addAction(action)
-            menu.addSeparator()
-
+        
         action = QtWidgets.QAction("Rename", menu)
         action.triggered.connect(self.showRenameDialog)
         menu.addAction(action)
@@ -338,6 +336,13 @@ class LibraryItem(studiolibrary.widgets.Item):
             action = QtWidgets.QAction("Select Folder", menu)
             action.triggered.connect(self.selectFolder)
             menu.addAction(action)
+
+        if self.isDeleteEnabled():
+            menu.addSeparator()
+            action = QtWidgets.QAction("Delete", menu)
+            action.triggered.connect(self.showDeleteDialog)
+            menu.addAction(action)
+            
 
     def copyPathToClipboard(self):
         """Copy the item path to the system clipboard."""
@@ -655,7 +660,7 @@ class LibraryItem(studiolibrary.widgets.Item):
         studiolibrary.removePath(self.path())
 
         if self.library():
-            self.library().removePath(self.path())
+            self.library().sync()
 
         self.deleted.emit(self)
 
