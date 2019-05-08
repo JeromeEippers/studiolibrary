@@ -16,19 +16,23 @@ class LibrarySelectMenu(QtCore.QObject):
         Keyword Arguments:
             name {str} -- the name of the menu (default: {"Library"})
             callback {function} -- the callback when we do the selection (default: {None})
-            parent {QMenu} -- the parent menu (default: {None})
+            parent {QMenu/QtWidget} -- the parent menu (default: {None})
         """
         super(LibrarySelectMenu, self).__init__()
 
         self._callback = callback
 
         self._menu = QtWidgets.QMenu(name, parent)
-        if parent != None:
+        if parent != None and isinstance(parent, QtWidgets.QMenu):
             parent.addMenu(self._menu)
 
         builddict = {'menu' : self._menu, 'children':{} }
 
-        for lib in libraries:
+        libkeys = libraries
+        if isinstance(libraries, dict): 
+            libkeys = sorted(libraries.keys())
+
+        for lib in libkeys:
             d = builddict
 
             paths = lib.split('/')
