@@ -85,7 +85,7 @@ class LibraryWindow(QtWidgets.QWidget):
     }
 
     TRASH_ENABLED = False
-    PROGRESS_BAR_VISIBLE = False
+    PROGRESS_BAR_VISIBLE = True
     SETTINGS_DIALOG_ENABLED = False  # Still in development
     RECURSIVE_SEARCH_ENABLED = False
 
@@ -1386,7 +1386,7 @@ class LibraryWindow(QtWidgets.QWidget):
                     action.triggered.connect(callback)
                     editMenu.addAction(action)
         else:
-            
+
             if item and item.EnableMoveCopy:
                 editMenu = studioqt.Menu(menu)
                 editMenu.setTitle("Edit")

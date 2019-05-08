@@ -374,7 +374,7 @@ class LibraryItem(studiolibrary.widgets.Item):
         def _callback(self, items, selected, path):
             if self.libraryWindow():
                 self.libraryWindow().moveItems(items, path, copy=True, force=True)
-                self.library().sync()
+                self.libraryWindow().sync()
                 
         if self.EnableMoveCopy:
             callback = partial(_callback, self, items)
@@ -736,7 +736,9 @@ class LibraryItem(studiolibrary.widgets.Item):
         """
         studiolibrary.removePath(self.path())
 
-        if self.library():
+        if self.libraryWindow():
+            self.libraryWindow().sync()
+        elif self.library():
             self.library().sync()
 
         self.deleted.emit(self)
