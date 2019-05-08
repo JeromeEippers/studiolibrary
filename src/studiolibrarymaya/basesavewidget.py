@@ -162,6 +162,24 @@ class BaseSaveWidget(QtWidgets.QWidget):
 
         schema = item.saveSchema()
 
+        #try to combine name and comment from the item if it is not a new
+        try:
+            def _setDefault(schema, info, name):
+                for inf in info:
+                    if inf['name'] == name:
+                        for shem in schema:
+                            if shem['name'] == name:
+                                shem['value'] = inf['value']
+                                break
+                        break
+
+            info = item.info()
+            _setDefault(schema, info, 'name')
+            _setDefault(schema, info, 'comment')
+
+        except Exception:
+            pass
+
         if schema:
             optionsWidget = studiolibrary.widgets.FormWidget(self)
             optionsWidget.setSchema(schema)

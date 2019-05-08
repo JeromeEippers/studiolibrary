@@ -110,6 +110,12 @@ class LibraryItem(studiolibrary.widgets.Item):
         widget = cls.CreateWidgetClass()
         libraryWindow.setCreateWidget(widget)
 
+    def showCreateWidgetOverride(self):
+        """Show the create Widget, from the self method
+        this is mainly used in the baseitem to automatically fill the proper info
+        """
+        self.showCreateWidget(self.__class__, self.libraryWindow())
+
     @classmethod
     def isValidPath(cls, path):
         """
@@ -395,6 +401,11 @@ class LibraryItem(studiolibrary.widgets.Item):
         action = QtWidgets.QAction("Rename", menu)
         action.triggered.connect(self.showRenameDialog)
         menu.addAction(action)
+
+        if self.EnableMoveCopy:
+            action = QtWidgets.QAction("Replace", menu)
+            action.triggered.connect(self.showCreateWidgetOverride)
+            menu.addAction(action)
 
         self.contextMoveMenu(menu, items)
         self.contextCopyMenu(menu, items)
@@ -728,7 +739,7 @@ class LibraryItem(studiolibrary.widgets.Item):
     # Support for copy and rename
     # -----------------------------------------------------------------
 
-    def delete(self):
+    def delete(self, needSync=True):
         """
         Delete the item from disc and the library model.
 
@@ -736,10 +747,11 @@ class LibraryItem(studiolibrary.widgets.Item):
         """
         studiolibrary.removePath(self.path())
 
-        if self.libraryWindow():
-            self.libraryWindow().sync()
-        elif self.library():
-            self.library().sync()
+        if needSync:
+            if self.libraryWindow():
+                self.libraryWindow().sync()
+            elif self.library():
+                self.library().sync()
 
         self.deleted.emit(self)
 
@@ -877,7 +889,7 @@ class LibraryItem(studiolibrary.widgets.Item):
         path = self.path()
 
         title = "Item already exists"
-        text = 'Would you like to move the existing item "{}" to the trash?'
+        text = 'Would you like to delete the existing item "{}"?'
         text = text.format(self.name())
 
         buttons = QtWidgets.QMessageBox.Yes | \
@@ -891,8 +903,8 @@ class LibraryItem(studiolibrary.widgets.Item):
 
         if button == QtWidgets.QMessageBox.Yes:
             library = self.library()
-            item = studiolibrary.LibraryItem(path, library=library)
-            self.libraryWindow().moveItemsToTrash([item])
+            item = studiolibrary.LibraryItem(path, library=library, libraryWindow=self.libraryWindow())
+            item.delete(False)
             self.setPath(path)
         else:
             raise ItemSaveError("You cannot save over an existing item.")

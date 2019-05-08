@@ -90,6 +90,25 @@ class BaseItem(studiolibrary.LibraryItem):
             libraryWindow.setCreateWidget(widget)
             libraryWindow.folderSelectionChanged.connect(widget.setFolderPath)
 
+
+    def showCreateWidgetOverride(self):
+        """
+        Show a create widget, but with the same info as this widget already pre filled.
+        This is done to allow for a quick "replace"
+        """
+
+        widget = self.CreateWidgetClass(self, parent=self.libraryWindow())
+
+        path = '/'.join(studiolibrary.normPath(self.path()).split('/')[:-1])
+
+        widget.folderFrame().hide()
+        widget.setFolderPath(path)
+        widget.setLibraryWindow(self.libraryWindow())
+
+        self.libraryWindow().setCreateWidget(widget)
+        self.libraryWindow().folderSelectionChanged.connect(widget.setFolderPath)
+
+
     def __init__(self, *args, **kwargs):
         """
         Initialise a new instance for the given path.
@@ -179,7 +198,7 @@ class BaseItem(studiolibrary.LibraryItem):
             {
                 "name": "name",
                 "type": "string",
-                "layout": "vertical",
+                "layout": "vertical"
             },
             {
                 "name": "comment",
