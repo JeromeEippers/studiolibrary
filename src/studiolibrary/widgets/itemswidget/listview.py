@@ -34,7 +34,7 @@ class ListView(ItemViewMixin, QtWidgets.QListView):
 
     DEFAULT_DRAG_THRESHOLD = 10
 
-    def __init__(self, *args):
+    def __init__(self, supportDrag=True, *args):
         QtWidgets.QListView.__init__(self, *args)
         ItemViewMixin.__init__(self)
 
@@ -58,8 +58,8 @@ class ListView(ItemViewMixin, QtWidgets.QListView):
         self.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
         self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 
-        self.setAcceptDrops(True)
-        self.setDragEnabled(True)
+        self.setAcceptDrops(supportDrag)
+        self.setDragEnabled(supportDrag)
         self.setDragDropMode(QtWidgets.QAbstractItemView.DragDrop)
 
         self.clicked.connect(self._indexClicked)

@@ -73,7 +73,7 @@ class ItemsWidget(QtWidgets.QWidget):
         self._dataset = None
         self._treeWidget = TreeWidget(self)
 
-        self._listView = ListView(self)
+        self._listView = ListView(False, self)
         self._listView.setTreeWidget(self._treeWidget)
 
         self._delegate = ItemDelegate()
