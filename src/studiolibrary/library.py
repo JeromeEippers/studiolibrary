@@ -367,7 +367,8 @@ class Library(QtCore.QObject):
             logger.info('No path set for syncing data')
             return
 
-        percentCallback("Syncing", -1)
+        if percentCallback:
+            percentCallback("Syncing", -1)
 
         data = self.read()
 
@@ -396,10 +397,12 @@ class Library(QtCore.QObject):
 
             data[path] = itemData
 
-        percentCallback("Post Sync", -1)
+        if percentCallback:
+            percentCallback("Post Sync", -1)
         self.postSync(data)
 
-        percentCallback("Saving Cache", -1)
+        if percentCallback:
+            percentCallback("Saving Cache", -1)
         self.save(data)
 
         self.dataChanged.emit()
