@@ -48,6 +48,8 @@ class ItemsWidget(QtWidgets.QWidget):
     DEFAULT_MIN_LIST_SIZE = 15
     DEFAULT_MIN_ICON_SIZE = 50
 
+    DEFAULT_SUPPORT_DRAG = False
+
     itemClicked = QtCore.Signal(object)
     itemDoubleClicked = QtCore.Signal(object)
 
@@ -73,7 +75,8 @@ class ItemsWidget(QtWidgets.QWidget):
         self._dataset = None
         self._treeWidget = TreeWidget(self)
 
-        self._listView = ListView(False, self)
+        self._support_drag = self.DEFAULT_SUPPORT_DRAG
+        self._listView = ListView(self._support_drag, self)
         self._listView.setTreeWidget(self._treeWidget)
 
         self._delegate = ItemDelegate()
@@ -235,8 +238,8 @@ class ItemsWidget(QtWidgets.QWidget):
         :Type value: bool
         :rtype: None
         """
-        self.listView().setDragEnabled(not value)
-        self.listView().setDropEnabled(not value)
+        self.listView().setDragEnabled(self._support_drag and not value)
+        self.listView().setDropEnabled(self._support_drag and not value)
 
     def verticalScrollBar(self):
         """
