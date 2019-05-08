@@ -47,6 +47,8 @@ class BaseItemSignals(QtCore.QObject):
 
 class BaseItem(studiolibrary.LibraryItem):
 
+    EnableMoveCopy = True
+
     _baseItemSignals = BaseItemSignals()
 
     loadValueChanged = _baseItemSignals.loadValueChanged

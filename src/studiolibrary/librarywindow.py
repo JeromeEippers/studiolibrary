@@ -1385,6 +1385,15 @@ class LibraryWindow(QtWidgets.QWidget):
                     action.setEnabled(not self.isTrashSelected())
                     action.triggered.connect(callback)
                     editMenu.addAction(action)
+        else:
+            
+            if item and item.EnableMoveCopy:
+                editMenu = studioqt.Menu(menu)
+                editMenu.setTitle("Edit")
+                menu.addMenu(editMenu)
+
+                item.contextCopyMenu(editMenu, items)
+
 
         menu.addSeparator()
         #remove settings from right click menu

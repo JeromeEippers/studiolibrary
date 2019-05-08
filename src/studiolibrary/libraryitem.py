@@ -55,6 +55,7 @@ class LibraryItemSignals(QtCore.QObject):
 class LibraryItem(studiolibrary.widgets.Item):
 
     EnabledOnlyInLibrary = True
+    EnableMoveCopy = False
     EnableNestedItems = False
 
     Extension = ""
@@ -305,6 +306,81 @@ class LibraryItem(studiolibrary.widgets.Item):
         """
         return False
 
+
+    def userLibrariesSelectorMenu(self, menuName, callback=None, parentMenu=None):
+        if self.library():
+
+            user = self.library().currentUser() + ".user"
+
+            libItems = self.library().findItems([
+                {
+                    'operator': 'or',
+                    'filters': [
+                        ('type', 'is', 'Library'),
+                        ('type', 'is', 'Folder')]
+                },
+                {
+                    'operator': 'and',
+                    'filters': [
+                        ('path', 'contains', user),
+                        ('path', 'contains', '.lib')]
+                }
+            ])
+
+            #build a dict with the libraries to get the lib_id from them
+            libdict = { item.path() : item.itemData()['lib_id'] for item in libItems if item.itemData()['type'] == 'Library'}
+            
+            #create a dict with all the folder
+            folderdict = { 
+                libdict[ item.path().split('.lib')[0]+'.lib' ] + item.path().split('.lib')[-1] : item.path()
+                for item in libItems if item.itemData()['type'] == 'Folder' 
+                }
+
+            #concatanate dicts
+            libPaths = {v:k for k,v in libdict.iteritems()}
+            libPaths.update(folderdict)
+
+            menu = studiolibrary.widgets.LibrarySelectMenu(libPaths, name=menuName, callback=callback, parent=parentMenu)
+            return menu.menu()
+
+
+    def contextMoveMenu(self, menu, items=None):
+        """Create the move menu
+        
+        Arguments:
+            menu {QMenu} -- the parent menu
+        
+        Keyword Arguments:
+            items {list of items} -- list of items that were selected when calling this menu (default: {None})
+        """
+        def _callback(self, items, selected, path):
+            if self.libraryWindow():
+                self.libraryWindow().moveItems(items, path, copy=False, force=True)
+
+        if self.EnableMoveCopy:
+            callback = partial(_callback, self, items)
+            self.userLibrariesSelectorMenu("Move to", callback, menu)
+
+
+    def contextCopyMenu(self, menu, items=None):
+        """Create the copy menu
+        
+        Arguments:
+            menu {QMenu} -- the parent menu
+        
+        Keyword Arguments:
+            items {list of items} -- list of items that were selected when calling this menu (default: {None})
+        """
+        def _callback(self, items, selected, path):
+            if self.libraryWindow():
+                self.libraryWindow().moveItems(items, path, copy=True, force=True)
+                self.library().sync()
+                
+        if self.EnableMoveCopy:
+            callback = partial(_callback, self, items)
+            self.userLibrariesSelectorMenu("Copy to", callback, menu)
+
+
     def contextEditMenu(self, menu, items=None):
         """
         Called when the user would like to edit the item from the menu.
@@ -320,9 +396,15 @@ class LibraryItem(studiolibrary.widgets.Item):
         action.triggered.connect(self.showRenameDialog)
         menu.addAction(action)
 
-        action = QtWidgets.QAction("Move to", menu)
-        action.triggered.connect(self.showMoveDialog)
-        menu.addAction(action)
+        self.contextMoveMenu(menu, items)
+        self.contextCopyMenu(menu, items)
+
+        if self.libraryWindow():
+            action = QtWidgets.QAction("Select Folder", menu)
+            action.triggered.connect(self.selectFolder)
+            menu.addAction(action)
+
+        menu.addSeparator()
 
         action = QtWidgets.QAction("Show in Folder", menu)
         action.triggered.connect(self.showInFolder)
@@ -331,11 +413,6 @@ class LibraryItem(studiolibrary.widgets.Item):
         action = QtWidgets.QAction("Copy Path", menu)
         action.triggered.connect(self.copyPathToClipboard)
         menu.addAction(action)
-
-        if self.libraryWindow():
-            action = QtWidgets.QAction("Select Folder", menu)
-            action.triggered.connect(self.selectFolder)
-            menu.addAction(action)
 
         if self.isDeleteEnabled():
             menu.addSeparator()
