@@ -153,10 +153,7 @@ class Library(QtCore.QObject):
         Returns:
             string -- the geppetto id of the actice character
         """
-        print "ACTIVECHARACTER"
         if self._activeCharacter:
-            print "ACTIVECHARACTER", self._activeCharacter
-            print "ACTIVECHARACTER", self._activeCharacter, self.findRigInSceneFromNamespace(self._activeCharacter)
             return self.findRigInSceneFromNamespace(self._activeCharacter)
         return ""
 
