@@ -254,7 +254,8 @@ class BaseLoadWidget(QtWidgets.QWidget):
         :rtype: None
         """
         self.setScriptJobEnabled(False)
-        self.item().saveOptions(**self._optionsWidget.optionsToDict())
+        if self._optionsWidget:
+            self.item().saveOptions(**self._optionsWidget.optionsToDict())
         QtWidgets.QWidget.close(self)
 
     def scriptJob(self):
