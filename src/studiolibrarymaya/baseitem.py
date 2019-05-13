@@ -499,12 +499,38 @@ class BaseItem(studiolibrary.LibraryItem):
 
         :rtype: list[str]
         """
+
+        #get the list of mirror in the main folder
         paths = list(studiolibrary.walkup(
                 self.path(),
                 match=lambda path: path.endswith(".mirror"),
                 depth=10,
             )
         )
+
+        #check if we have also mirrors in the global folder
+        myuser = self.FolderUserItem()
+        if myuser and myuser.user() != 'global':
+
+            #get the library name and compute the global path
+            mylib = self.FolderLibraryItem()
+            if mylib:
+                libids = mylib.libraryId().split('/')
+                globalpath = os.path.join(
+                    self.library().globalUserFolderPath(),
+                    os.path.sep.join(libids)
+                ) + '.lib'
+
+                #add a dummy folder to the path for the 'walkup' to start by the lib
+                globalpath = os.path.join(globalpath, 'dummy')
+
+                setIterator = studiolibrary.walkup(
+                    globalpath,
+                    match=lambda path: path.endswith(".mirror"),
+                    depth=10,
+                )
+
+                paths += list(setIterator)
         return paths
 
     def namespaces(self):
