@@ -114,16 +114,44 @@ class SetsMenu(QtWidgets.QMenu):
         """
         :rtype: list[setsitem.SetsItem]
         """
-        path = self.item().path()
 
-        paths = studiolibrary.walkup(
-            path,
+        items = []
+        paths = []
+
+        #first get all the one from the global library if it exists:
+        myuser = self.item().FolderUserItem()
+        if myuser and myuser.user() != 'global':
+
+            #get the library name and compute the global path
+            mylib = self.item().FolderLibraryItem()
+            if mylib:
+                libids = mylib.libraryId().split('/')
+                globalpath = os.path.join(
+                    self.item().library().globalUserFolderPath(),
+                    os.path.sep.join(libids)
+                ) + '.lib'
+
+                #add a dummy folder to the path for the 'walkup' to start by the lib
+                globalpath = os.path.join(globalpath, 'dummy')
+
+                setIterator = studiolibrary.walkup(
+                    globalpath,
+                    match=lambda path: path.endswith(".set"),
+                    depth=10,
+                )
+
+                paths += list(setIterator)
+
+        #now add the set from the current folder
+
+        setIterator = studiolibrary.walkup(
+            self.item().path(),
             match=lambda path: path.endswith(".set"),
             depth=10,
         )
+        paths += list(setIterator)
 
-        items = []
-        paths = list(paths)
+        #convert to items
         libraryWindow = self.item().libraryWindow()
 
         for path in paths:

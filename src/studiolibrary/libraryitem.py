@@ -911,6 +911,28 @@ class LibraryItem(studiolibrary.widgets.Item):
 
         return button
 
+
+    def FolderLibraryItem(self):
+        """
+        returns the containing folder library item
+        """
+        from . import folderlibraryitem
+        if '.lib' in self.path():
+            path = self.path().split('.lib')[0] + '.lib'
+            return folderlibraryitem.FolderLibraryItem(path, library=self.library(), libraryWindow=self.libraryWindow())
+        return None
+
+
+    def FolderUserItem(self):
+        """
+        returns the containing Folder user item
+        """
+        from . import folderuseritem
+        if '.user' in self.path():
+            path = self.path().split('.user')[0] + '.user'
+            return folderuseritem.FolderUserItem(path, library=self.library(), libraryWindow=self.libraryWindow())
+        return None
+
     # -----------------------------------------------------------------
     # Support for painting the type icon
     # -----------------------------------------------------------------

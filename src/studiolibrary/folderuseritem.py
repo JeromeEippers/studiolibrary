@@ -134,4 +134,11 @@ class FolderUserItem(studiolibrary.LibraryItem):
         """
         return False
 
+
+    def FolderUserItem(self):
+        """
+        returns the containing Folder user item
+        """
+        return self
+
 studiolibrary.registerItem(FolderUserItem)

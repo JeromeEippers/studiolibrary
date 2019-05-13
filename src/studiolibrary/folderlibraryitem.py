@@ -78,6 +78,12 @@ class FolderLibraryItem(studiolibrary.LibraryItem):
             }
         ]
 
+    def libraryId(self):
+        """
+        get the library id
+        """
+        return self.itemData()['lib_id']
+
     @classmethod
     def showCreateWidget(cls, libraryWindow):
         """
@@ -177,6 +183,13 @@ class FolderLibraryItem(studiolibrary.LibraryItem):
         """Check if we can delete this element
         """
         return True
+
+
+    def FolderLibraryItem(self):
+        """
+        returns the containing folder library item
+        """
+        return self
 
 
 studiolibrary.registerItem(FolderLibraryItem)

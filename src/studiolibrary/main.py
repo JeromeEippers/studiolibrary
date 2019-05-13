@@ -47,6 +47,16 @@ def zefir_library():
         return rootPath
 
 
+def zefir_globalUserLibraryPath():
+    """return the path of the global user in the library
+    
+    Returns:
+        string -- the path to the global.user folder in the library
+    """
+
+    return os.path.join(zefir_library(), 'global.user')
+
+
 def zefir_currentUserLibraryPath():
     """return the path to the current user in the library
     
@@ -54,7 +64,7 @@ def zefir_currentUserLibraryPath():
         string -- the path to the xxx.user folder in the library
     """
 
-    return os.path.join( os.path.join(zefir_library, 'user'), zefir_currentuser() + ".user" )
+    return os.path.join( os.path.join(zefir_library(), 'user'), zefir_currentuser() + ".user" )
 
     
 def zefir_supervisors():
