@@ -277,8 +277,9 @@ class BaseSaveWidget(QtWidgets.QWidget):
         path = self.folderPath()
         position = QtGui.QCursor().pos()
         libraryWindow = self.libraryWindow()
+        namespaces = self.item().namespaces()
 
-        menu = setsmenu.SetsMenu.fromPath(path, libraryWindow=libraryWindow)
+        menu = setsmenu.SetsMenu.fromPath(path, libraryWindow=libraryWindow, namespaces=namespaces)
         menu.exec_(position)
 
     def close(self):
