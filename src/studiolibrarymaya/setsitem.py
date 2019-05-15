@@ -39,6 +39,14 @@ class SetsItem(baseitem.BaseItem):
         self.setTransferBasename("set.json")
         self.setTransferClass(mutils.SelectionSet)
 
+    def menuItemIcon(self):
+        """name of the icon to use in the menu
+        
+        Returns:
+            str -- the resource name
+        """
+        return ''
+
     def loadFromCurrentOptions(self):
         """Load the selection set using the settings for this item."""
         namespaces = self.namespaces()

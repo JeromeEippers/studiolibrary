@@ -21,6 +21,7 @@ import studiolibrary
 import studiolibrarymaya
 
 from studiolibrarymaya import setsitem
+from studiolibrarymaya import setsgeppetto
 
 
 __all__ = ["SetsMenu"]
@@ -118,6 +119,13 @@ class SetsMenu(QtWidgets.QMenu):
         items = []
         paths = []
 
+        #add the geppetto selection sets
+        items += [        
+            setsgeppetto.SetsGeppetto('Body', 'ctl body'),
+            setsgeppetto.SetsGeppetto('Face', 'ctl face'),
+            setsgeppetto.SetsGeppetto('All', 'ctl'),
+        ]
+
         #first get all the one from the global library if it exists:
         myuser = self.item().FolderUserItem()
         if myuser and myuser.user() != 'global':
@@ -178,9 +186,13 @@ class SetsMenu(QtWidgets.QMenu):
             for selectionSet in selectionSets:
                 dirname = os.path.basename(selectionSet.dirname())
                 basename = selectionSet.name().replace(selectionSet.extension(), "")
-                nicename = dirname + ": " + basename
+                nicename = '{0}{1}{2}'.format (dirname, ": " if dirname != '' else '', basename)
 
-                action = QtWidgets.QAction(nicename, self)
+                if selectionSet.menuItemIcon() != '': 
+                    icon = studiolibrarymaya.resource().icon(selectionSet.menuItemIcon())
+                    action = QtWidgets.QAction(icon, nicename, self)
+                else:
+                    action = QtWidgets.QAction(nicename, self)
                 callback = partial(selectionSet.load, namespaces=self.namespaces())
                 action.triggered.connect(callback)
                 self.addAction(action)
