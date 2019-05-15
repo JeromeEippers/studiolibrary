@@ -466,8 +466,15 @@ class BaseItem(studiolibrary.LibraryItem):
 
         :rtype: mutils.MirrorTable or None
         """
-        mirrorTable = None
 
+        #return a mirror geppetto instead of the mirror table
+        namespaces = self.namespaces()
+        if namespaces:
+            return mutils.MirrorGeppetto(namespaces[0])
+        return None
+
+        """
+        mirrorTable = None
         mirrorTablePath = self.mirrorTablePath()
 
         if mirrorTablePath:
@@ -478,6 +485,7 @@ class BaseItem(studiolibrary.LibraryItem):
                 mirrorTable = mutils.MirrorTable.fromPath(path)
 
         return mirrorTable
+        """
 
     def mirrorTablePath(self):
         """
