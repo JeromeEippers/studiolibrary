@@ -97,6 +97,17 @@ class Node(object):
             self._namespace = ":".join(self.shortname().split(":")[:-1])
         return self._namespace
 
+    def nameOnly(self):
+        """return the short name without namespace
+        
+        Returns:
+            [type] -- [description]
+        """
+        shortName = self.shortname()
+        if ':' in shortName:
+            return shortName.split(":")[-1]
+        return shortName
+
     def stripFirstPipe(self):
         """
         n = Node("|pSphere")
