@@ -581,5 +581,5 @@ class Pose(mutils.TransferObject):
                 try:
                     dstAttribute.set(value, blend=blend, key=key)
                 except (ValueError, RuntimeError):
-                    cache[i] = (None, None)
+                    cache[i] = (None, None, None)
                     logger.debug('Ignoring %s', dstAttribute.fullname())
