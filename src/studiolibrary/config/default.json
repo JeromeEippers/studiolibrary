@@ -19,7 +19,7 @@
   "helpUrl": "https://www.studiolibrary.com",
 
   // Report issue url
-  "reportIssueUrl": "https://github.com/krathjen/studiolibrary/issues/new",
+  "reportIssueUrl": "http://redmine.nwavedigital.local/projects/nwstudiolibrary/issues/new",
 
   // The temp location used for saving out items and thumbnails
   "tempPath": "{temp}/StudioLibrary/{user}",
