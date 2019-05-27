@@ -342,7 +342,7 @@ class LibraryWindow(QtWidgets.QWidget):
         name = "Sync items"
         icon = studiolibrary.resource().icon("sync")
         icon.setColor(iconColor)
-        tip = "Sync with the filesystem"
+        tip = "[Sync] Update the library with all the poses from all animators"
         self.addMenuBarAction(name, icon, tip, callback=self.sync)
 
         name = "Settings"
