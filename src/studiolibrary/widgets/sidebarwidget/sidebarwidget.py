@@ -926,7 +926,7 @@ class SidebarWidget(QtWidgets.QTreeWidget):
         action = SeparatorAction("Library Filter", menu)
         menu.addAction(action)
 
-        action = QtWidgets.QAction("Active Entity", menu)
+        action = QtWidgets.QAction("Active Character", menu)
         action.setCheckable(True)
         action.setChecked(self.displayLibs() == SideBarDisplayLibs.FROM_SCENE)
         callback = partial(self.setLibraryFilter, SideBarDisplayLibs.FROM_SCENE)
