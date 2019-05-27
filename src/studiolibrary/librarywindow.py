@@ -1057,7 +1057,7 @@ class LibraryWindow(QtWidgets.QWidget):
         for cls in sorted(studiolibrary.registeredItems(), key=_key):
 
             inlib = '.lib' in self.selectedFolderPath()
-            if cls.EnabledOnlyInLibrary == inlib:
+            if cls.EnabledCreation and cls.EnabledOnlyInLibrary == inlib:
 
                 action = cls.createAction(menu, self)
 

@@ -32,6 +32,7 @@ iconPath = studiolibrarymaya.resource().get("icons", "mirrortable.png")
 
 class MirrorItem(baseitem.BaseItem):
 
+    EnabledCreation = False #no need for mirror item anymore, we use Geppetto
     Extensions = [".mirror"]
     Extension = ".mirror"
     MenuName = "Mirror Table"

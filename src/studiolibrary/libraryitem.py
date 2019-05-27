@@ -54,6 +54,7 @@ class LibraryItemSignals(QtCore.QObject):
 # Note: We will be changing the base class in the near future
 class LibraryItem(studiolibrary.widgets.Item):
 
+    EnabledCreation = True
     EnabledOnlyInLibrary = True
     EnableMoveCopy = False
     EnableNestedItems = False
